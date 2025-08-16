@@ -1,6 +1,7 @@
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import {ThemeProvider} from "../components/theme-provider"
+import SmoothScrollProvider from "../components/smooth-scroll-provider"
 import "./globals.css"
 
 export const metadata = {
@@ -23,7 +24,9 @@ html {
       </head>
       <body className="bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          {children}
+          <SmoothScrollProvider>
+            {children}
+          </SmoothScrollProvider>
         </ThemeProvider>
       </body>
     </html>

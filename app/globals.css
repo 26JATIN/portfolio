@@ -122,9 +122,29 @@
     @apply bg-background text-foreground;
   }
 
-  /* Adding smooth scrolling behavior without mandatory snapping */
+  /* Lenis smooth scrolling setup */
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto; /* Disable native smooth scrolling to let Lenis handle it */
+  }
+
+  html.lenis {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
   }
 
   /* Adding glassmorphism and animation utilities */

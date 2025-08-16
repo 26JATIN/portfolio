@@ -339,7 +339,7 @@ export function SelectedWorkSection() {
             style={{ animation: "fadeIn 0.3s ease-out forwards" }}
           />
           <div
-            className="relative max-w-4xl max-h-[90vh] w-full mx-4 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+            className="relative max-w-4xl max-h-[90vh] w-full mx-4 bg-white dark:bg-black rounded-2xl shadow-2xl overflow-hidden"
             style={{
               transformOrigin: `${animationOrigin.x}px ${animationOrigin.y}px`,
               animation: "cardExpand 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
