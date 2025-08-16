@@ -4,12 +4,16 @@ import { Button } from "../components/ui/button"
 import { Badge } from "../components/ui/badge"
 import { CardContainer, CardBody, CardItem } from "../components/ui/3d-card"
 import { useEffect, useRef, useState } from "react"
+import Lenis from '@studio-freight/lenis'
 
 export function SelectedWorkSection() {
   const [isVisible, setIsVisible] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
   const [animationOrigin, setAnimationOrigin] = useState({ x: 0, y: 0 })
+  const [savedScrollPosition, setSavedScrollPosition] = useState(0)
   const sectionRef = useRef(null)
+  const modalContentRef = useRef(null)
+  const modalLenisRef = useRef(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -27,6 +31,103 @@ export function SelectedWorkSection() {
 
     return () => observer.disconnect()
   }, [])
+
+  // Cleanup effect to restore body styles when component unmounts or selectedProject changes
+  useEffect(() => {
+    return () => {
+      if (selectedProject) {
+        // Cleanup modal Lenis instance
+        if (modalLenisRef.current) {
+          modalLenisRef.current.destroy()
+          modalLenisRef.current = null
+        }
+        
+        // Restore body styles
+        document.body.style.position = ""
+        document.body.style.top = ""
+        document.body.style.width = ""
+        document.body.style.overflow = ""
+        
+        // Resume main Lenis
+        if (window.lenis) {
+          window.lenis.start()
+        }
+      }
+    }
+  }, [selectedProject])
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup modal Lenis instance
+      if (modalLenisRef.current) {
+        modalLenisRef.current.destroy()
+        modalLenisRef.current = null
+      }
+      
+      // Restore body styles
+      document.body.style.position = ""
+      document.body.style.top = ""
+      document.body.style.width = ""
+      document.body.style.overflow = ""
+      
+      // Resume main Lenis
+      if (window.lenis) {
+        window.lenis.start()
+      }
+    }
+  }, [])
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && selectedProject) {
+        closeModal()
+      }
+    }
+
+    if (selectedProject) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [selectedProject])
+
+  // Initialize Lenis for modal content
+  useEffect(() => {
+    if (selectedProject && modalContentRef.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        modalLenisRef.current = new Lenis({
+          wrapper: modalContentRef.current,
+          content: modalContentRef.current.firstChild,
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          direction: 'vertical',
+          gestureDirection: 'vertical',
+          smooth: true,
+          mouseMultiplier: 1,
+          smoothTouch: false,
+          touchMultiplier: 2,
+          infinite: false,
+        })
+
+        function raf(time) {
+          modalLenisRef.current?.raf(time)
+          if (modalLenisRef.current) {
+            requestAnimationFrame(raf)
+          }
+        }
+        requestAnimationFrame(raf)
+      }, 100)
+    }
+
+    return () => {
+      if (modalLenisRef.current) {
+        modalLenisRef.current.destroy()
+        modalLenisRef.current = null
+      }
+    }
+  }, [selectedProject])
 
   const projects = [
     {
@@ -77,13 +178,47 @@ export function SelectedWorkSection() {
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,
     })
+    
+    // Save current scroll position
+    const currentScrollY = window.scrollY
+    setSavedScrollPosition(currentScrollY)
+    
     setSelectedProject(project)
+    
+    // Prevent scrolling while maintaining position
+    document.body.style.position = "fixed"
+    document.body.style.top = `-${currentScrollY}px`
+    document.body.style.width = "100%"
     document.body.style.overflow = "hidden"
+    
+    // Stop Lenis after setting position
+    if (window.lenis) {
+      window.lenis.stop()
+    }
   }
 
   const closeModal = () => {
     setSelectedProject(null)
-    document.body.style.overflow = "unset"
+    
+    // Destroy modal Lenis instance
+    if (modalLenisRef.current) {
+      modalLenisRef.current.destroy()
+      modalLenisRef.current = null
+    }
+    
+    // Restore normal scrolling and position
+    document.body.style.position = ""
+    document.body.style.top = ""
+    document.body.style.width = ""
+    document.body.style.overflow = ""
+    
+    // Restore scroll position
+    window.scrollTo(0, savedScrollPosition)
+    
+    // Resume main Lenis scroll
+    if (window.lenis) {
+      window.lenis.start()
+    }
   }
 
   const renderProjectContent = (project) => {
@@ -327,7 +462,7 @@ export function SelectedWorkSection() {
       {/* Modal Popup */}
       {selectedProject && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{
             transformOrigin: `${animationOrigin.x}px ${animationOrigin.y}px`,
             animation: "modalOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
@@ -339,7 +474,7 @@ export function SelectedWorkSection() {
             style={{ animation: "fadeIn 0.3s ease-out forwards" }}
           />
           <div
-            className="relative max-w-4xl max-h-[90vh] w-full mx-4 bg-white dark:bg-black rounded-2xl shadow-2xl overflow-hidden"
+            className="relative max-w-4xl max-h-[90vh] w-full bg-white dark:bg-black rounded-2xl shadow-2xl flex flex-col"
             style={{
               transformOrigin: `${animationOrigin.x}px ${animationOrigin.y}px`,
               animation: "cardExpand 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
@@ -352,39 +487,72 @@ export function SelectedWorkSection() {
               ✕
             </button>
 
-            <div className="p-8">
-              <div className={`bg-gradient-to-br ${selectedProject.gradient} rounded-2xl p-8 mb-6`}>
-                <div className="bg-white rounded-xl h-96 p-6 shadow-lg">
-                  <div className="text-center text-gray-500 flex items-center justify-center h-full text-lg">
-                    {selectedProject.title} - Full Website Preview
-                    <br />
-                    <span className="text-sm mt-2">Actual website content would go here</span>
+            <div 
+              ref={modalContentRef}
+              className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+              style={{ height: '100%' }}
+            >
+              <div className="p-8">
+                <div className={`bg-gradient-to-br ${selectedProject.gradient} rounded-2xl p-8 mb-6`}>
+                  <div className="bg-white rounded-xl h-96 p-6 shadow-lg">
+                    <div className="text-center text-gray-500 flex items-center justify-center h-full text-lg">
+                      {selectedProject.title} - Full Website Preview
+                      <br />
+                      <span className="text-sm mt-2">Actual website content would go here</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <h2 className="text-3xl font-bold text-foreground">{selectedProject.title}</h2>
-                  <span className="text-muted-foreground text-lg">{selectedProject.year}</span>
-                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <h2 className="text-3xl font-bold text-foreground">{selectedProject.title}</h2>
+                    <span className="text-muted-foreground text-lg">{selectedProject.year}</span>
+                  </div>
 
-                <div className="flex flex-wrap gap-3">
-                  {selectedProject.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-sm px-3 py-1">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedProject.tags.map((tag, index) => (
+                      <Badge key={index} variant="secondary" className="text-sm px-3 py-1">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
 
-                <p className="text-muted-foreground leading-relaxed">
-                  Detailed project description would go here. This is where you would explain the project goals,
-                  design process, technologies used, and the final outcome.
-                </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Detailed project description would go here. This is where you would explain the project goals,
+                    design process, technologies used, and the final outcome.
+                  </p>
 
-                <div className="flex gap-4 pt-4">
-                  <Button className="rounded-full">View Live Site</Button>
-                  <Button variant="outline" className="rounded-full">Case Study</Button>
+                  <div className="space-y-4 text-muted-foreground leading-relaxed">
+                    <p>
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>
+                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </p>
+                    <p>
+                      Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                    </p>
+                    <p>
+                      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+                    </p>
+                    <p>
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    </p>
+                    <p>
+                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </p>
+                    <p>
+                      Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                    </p>
+                    <p>
+                      Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button className="rounded-full">View Live Site</Button>
+                    <Button variant="outline" className="rounded-full">Case Study</Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -423,8 +591,49 @@ export function SelectedWorkSection() {
             opacity: 1;
           }
         }
+
+        /* Custom scrollbar styling */
+        .scrollbar-thin {
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: #f7fafc;
+          border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background-color: #cbd5e0;
+          border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background-color: #a0aec0;
+        }
+
+        /* Dark mode scrollbar */
+        .dark .scrollbar-thin {
+          scrollbar-color: #4a5568 #2d3748;
+        }
+
+        .dark .scrollbar-thin::-webkit-scrollbar-track {
+          background: #2d3748;
+        }
+
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+          background-color: #4a5568;
+        }
+
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background-color: #718096;
+        }
       `}</style>
     </section>
   )
 }
-  
+
