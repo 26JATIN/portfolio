@@ -1,30 +1,10 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
+import React from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-import { motion, AnimatePresence } from "framer-motion"
 
 export function ContactSection() {
-  const [isVisible, setIsVisible] = useState(false)
-  const sectionRef = useRef(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
-      },
-      { threshold: 0.3 }
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
-    return () => observer.disconnect()
-  }, [])
 
   const socialPlatforms = [
     { 
@@ -66,7 +46,6 @@ export function ContactSection() {
 
   return (
     <section 
-      ref={sectionRef}
       className="relative bg-background text-foreground px-4 sm:px-6 lg:px-8 xl:px-16 py-16 sm:py-20 lg:py-24 min-h-screen overflow-hidden"
     >
       {/* Background decorative elements */}
@@ -78,12 +57,7 @@ export function ContactSection() {
 
       <div className="relative max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             <Badge
               variant="secondary"
               className="inline-flex items-center w-fit bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 px-4 py-2 text-sm font-semibold border border-emerald-200 dark:border-emerald-800 shadow-sm"
@@ -107,27 +81,19 @@ export function ContactSection() {
               I'm always excited to connect with fellow developers, discuss new opportunities, 
               or simply chat about technology and innovation. <span className="font-semibold text-foreground">Let's start a conversation!</span>
             </p>
-          </motion.div>
+          </div>
         </div>
 
         {/* Social Media Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mb-16"
-        >
+        <div className="mb-16">
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
             {socialPlatforms.map((platform, index) => (
-              <motion.a
+              <a
                 key={platform.name}
                 href={platform.url}
                 target={platform.name === "Resume" ? "_blank" : "_self"}
                 rel={platform.name === "Resume" ? "noopener noreferrer" : ""}
-                initial={{ opacity: 0, y: 20 }}
-                animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.6, delay: 0.8 + (index * 0.1) }}
                 className={`group ${platform.color} rounded-2xl p-6 text-white hover:scale-105 transform transition-all duration-300 shadow-lg hover:shadow-xl block`}
               >
                 <div className="text-center space-y-3">
@@ -144,18 +110,13 @@ export function ContactSection() {
                     </svg>
                   </div>
                 </div>
-              </motion.a>
+              </a>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Call to Action Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-          transition={{ duration: 0.8, delay: 1.0 }}
-          className="bg-gradient-to-br from-foreground to-foreground/90 rounded-3xl p-8 lg:p-12 text-background text-center mb-16"
-        >
+        <div className="bg-gradient-to-br from-foreground to-foreground/90 rounded-3xl p-8 lg:p-12 text-background text-center mb-16">
           <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Connect?</h3>
           <p className="text-lg text-background/80 mb-8 max-w-2xl mx-auto">
             Whether you're looking to collaborate on a project, discuss opportunities, 
@@ -169,15 +130,10 @@ export function ContactSection() {
               Send me an email
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Footer */}
-        <motion.footer
-          initial={{ opacity: 0 }}
-          animate={isVisible ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
-          className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-border/50 space-y-4 sm:space-y-0"
-        >
+        <footer className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-border/50 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-foreground to-foreground/80 rounded-2xl flex items-center justify-center text-background font-bold text-lg shadow-lg">
               J
@@ -198,7 +154,7 @@ export function ContactSection() {
               Download CV
             </Button>
           </div>
-        </motion.footer>
+        </footer>
       </div>
     </section>
   )
