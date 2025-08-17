@@ -26,7 +26,7 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
+    <section className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500 pt-20 sm:pt-24">
 
       {/* Subtle background gradient */}
       <div 
@@ -36,7 +36,7 @@ export function HeroSection() {
         }}
       />
       
-      <div className="relative z-10 min-h-screen flex items-center">
+      <div className="relative z-10 min-h-[calc(100vh-5rem)] sm:min-h-[calc(100vh-6rem)] flex items-center">
         <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
             

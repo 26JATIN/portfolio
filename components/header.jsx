@@ -20,22 +20,22 @@ export function Header() {
 
 	return (
 		<header
-			className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border border-border flex items-center justify-between transition-all duration-300 px-4 py-3 mx-4 mt-4 rounded-2xl shadow-sm ${
+			className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border border-border flex items-center justify-between transition-all duration-300 px-3 py-2 mx-3 mt-3 rounded-2xl shadow-sm sm:px-4 sm:py-3 sm:mx-4 sm:mt-4 ${
 				isVisible
 					? "opacity-100 visible"
 					: "opacity-0 invisible pointer-events-none"
 			}`}
 		>
 			<div className="flex items-center gap-2">
-				<div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-sm">
+				<div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-xs sm:text-sm">
 					C
 				</div>
-				<span className="text-lg font-semibold">Jatin Gupta</span>
+				<span className="text-base sm:text-lg font-semibold">Jatin Gupta</span>
 			</div>
 
-			<div className="flex items-center gap-4">
+			<div className="flex items-center gap-2 sm:gap-4">
 				<ThemeToggle />
-				<Button className="rounded-full px-4 py-1.5 text-sm bg-foreground text-background hover:bg-foreground/90">
+				<Button className="rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm bg-foreground text-background hover:bg-foreground/90">
 					Book a call
 				</Button>
 			</div>
