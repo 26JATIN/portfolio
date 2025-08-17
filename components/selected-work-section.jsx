@@ -280,7 +280,7 @@ export const Card = ({
               <Badge
                 key={tagIndex}
                 className="text-xs sm:text-sm px-2 sm:px-3 py-1"
-                variant={tagIndex === 0 ? "default" : "outline"}
+                variant="default"
               >
                 {tag}
               </Badge>
@@ -333,31 +333,29 @@ export function SelectedWorkSection() {
                 <div className="flex items-center gap-2 mb-3">
                   <div 
                     className="w-6 h-6 rounded" 
-                    style={{ backgroundColor: project.previewColor || '#3B82F6' }}
+                    style={{ backgroundColor: '#3B82F6' }}
                   ></div>
                   <span className="text-sm font-medium">{project.title}</span>
                 </div>
                 <h4 className="text-lg font-bold leading-tight">
-                  {project.previewTitle || project.title}
+                  {project.title}
                 </h4>
                 <p className="text-sm text-gray-600 line-clamp-3">
-                  {project.previewSubtitle || project.description}
+                  {project.projectOverview || project.category}
                 </p>
                 <div className="flex gap-2 mt-4">
                   <button 
-                    className="text-white text-sm px-4 py-2 rounded"
-                    style={{ backgroundColor: project.previewColor || '#3B82F6' }}
+                    className="text-white text-sm px-4 py-2 rounded bg-blue-600"
                   >
-                    {project.previewButtonText || 'View Project'}
+                    View Project
                   </button>
                   <button className="border text-sm px-4 py-2 rounded">
-                    {project.previewSecondButtonText || 'Learn More'}
+                    Learn More
                   </button>
                 </div>
                 <div className="mt-4 flex justify-end">
                   <div 
-                    className="w-16 h-16 rounded-full opacity-20"
-                    style={{ backgroundColor: project.previewColor || '#3B82F6' }}
+                    className="w-16 h-16 rounded-full opacity-20 bg-blue-600"
                   ></div>
                 </div>
               </div>

@@ -17,8 +17,6 @@ export default function AdminProjects() {
     category: '',
     tags: [],
     gradient: 'from-blue-100 to-blue-200',
-    description: '',
-    type: '',
     liveUrl: '',
     techStack: [],
     heroImage: '',
@@ -32,13 +30,6 @@ export default function AdminProjects() {
     technicalImplementation: '',
     results: '',
     resultMetrics: [],
-    
-    // Preview customization
-    previewTitle: '',
-    previewSubtitle: '',
-    previewColor: '#3B82F6',
-    previewButtonText: 'View Project',
-    previewSecondButtonText: 'Learn More',
     
     isPublished: false
   })
@@ -88,8 +79,6 @@ export default function AdminProjects() {
       category: '',
       tags: [],
       gradient: 'from-blue-100 to-blue-200',
-      description: '',
-      type: '',
       liveUrl: '',
       techStack: [],
       heroImage: '',
@@ -103,13 +92,6 @@ export default function AdminProjects() {
       technicalImplementation: '',
       results: '',
       resultMetrics: [],
-      
-      // Preview customization
-      previewTitle: '',
-      previewSubtitle: '',
-      previewColor: '#3B82F6',
-      previewButtonText: 'View Project',
-      previewSecondButtonText: 'Learn More',
       
       isPublished: false
     })
@@ -135,8 +117,6 @@ export default function AdminProjects() {
       category: project.category || '',
       tags: project.tags || [],
       gradient: project.gradient || 'from-blue-100 to-blue-200',
-      description: project.description || '',
-      type: project.type || '',
       liveUrl: project.liveUrl || '',
       techStack: project.techStack || [],
       heroImage: project.heroImage || '',
@@ -150,13 +130,6 @@ export default function AdminProjects() {
       technicalImplementation: project.technicalImplementation || '',
       results: project.results || '',
       resultMetrics: project.resultMetrics || [],
-      
-      // Preview customization
-      previewTitle: project.previewTitle || project.title || '',
-      previewSubtitle: project.previewSubtitle || project.description || '',
-      previewColor: project.previewColor || '#3B82F6',
-      previewButtonText: project.previewButtonText || 'View Project',
-      previewSecondButtonText: project.previewSecondButtonText || 'Learn More',
       
       isPublished: project.isPublished || false
     })
@@ -499,7 +472,7 @@ export default function AdminProjects() {
                 </div>
                 
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
-                  {project.description}
+                  {project.projectOverview || project.category}
                 </p>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -645,43 +618,16 @@ export default function AdminProjects() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Type *
+                        Live URL
                       </label>
                       <input
-                        type="text"
-                        value={formData.type}
-                        onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                        type="url"
+                        value={formData.liveUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, liveUrl: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                        placeholder="e.g., wellness, ecommerce, agency"
-                        required
+                        placeholder="https://example.com"
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                      rows={3}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Live URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.liveUrl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, liveUrl: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                      placeholder="https://example.com"
-                    />
                   </div>
 
                   {/* Gradient Selection */}
@@ -893,77 +839,6 @@ export default function AdminProjects() {
                             )}
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Preview Card Customization */}
-                  <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Preview Card Customization</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Preview Title
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.previewTitle}
-                          onChange={(e) => setFormData(prev => ({ ...prev, previewTitle: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                          placeholder="Title for preview card"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Preview Color
-                        </label>
-                        <input
-                          type="color"
-                          value={formData.previewColor}
-                          onChange={(e) => setFormData(prev => ({ ...prev, previewColor: e.target.value }))}
-                          className="w-full h-10 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Preview Subtitle
-                      </label>
-                      <textarea
-                        value={formData.previewSubtitle}
-                        onChange={(e) => setFormData(prev => ({ ...prev, previewSubtitle: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                        rows={2}
-                        placeholder="Subtitle for preview card"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          First Button Text
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.previewButtonText}
-                          onChange={(e) => setFormData(prev => ({ ...prev, previewButtonText: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                          placeholder="First button text"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Second Button Text
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.previewSecondButtonText}
-                          onChange={(e) => setFormData(prev => ({ ...prev, previewSecondButtonText: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                          placeholder="Second button text"
-                        />
                       </div>
                     </div>
                   </div>

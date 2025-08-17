@@ -40,7 +40,7 @@ export async function POST(request) {
     const projectData = await request.json()
     
     // Validate required fields
-    const requiredFields = ['title', 'year', 'category', 'description', 'type']
+    const requiredFields = ['title', 'year', 'category']
     for (const field of requiredFields) {
       if (!projectData[field]) {
         return NextResponse.json({
