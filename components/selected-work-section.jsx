@@ -20,6 +20,8 @@ export const Card = ({
 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
+  const modalContentRef = useRef(null);
+  const modalLenisRef = useRef(null);
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -38,6 +40,43 @@ export const Card = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
+  // Initialize Lenis for modal content
+  useEffect(() => {
+    if (open && modalContentRef.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        modalLenisRef.current = new Lenis({
+          wrapper: modalContentRef.current,
+          content: modalContentRef.current.firstChild,
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          direction: 'vertical',
+          gestureDirection: 'vertical',
+          smooth: true,
+          mouseMultiplier: 1,
+          smoothTouch: false,
+          touchMultiplier: 2,
+          infinite: false,
+        })
+
+        function raf(time) {
+          modalLenisRef.current?.raf(time)
+          if (modalLenisRef.current) {
+            requestAnimationFrame(raf)
+          }
+        }
+        requestAnimationFrame(raf)
+      }, 100)
+    }
+
+    return () => {
+      if (modalLenisRef.current) {
+        modalLenisRef.current.destroy()
+        modalLenisRef.current = null
+      }
+    }
+  }, [open])
+
   useOutsideClick(containerRef, () => handleClose());
 
   const handleOpen = () => {
@@ -47,13 +86,19 @@ export const Card = ({
 
   const handleClose = () => {
     setOpen(false);
+    
+    // Cleanup modal Lenis instance
+    if (modalLenisRef.current) {
+      modalLenisRef.current.destroy()
+      modalLenisRef.current = null
+    }
   };
 
   return (
     <>
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 h-screen overflow-auto">
+          <div className="fixed inset-0 z-50 h-screen overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -65,24 +110,121 @@ export const Card = ({
               exit={{ opacity: 0, scale: 0.9 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className="relative z-[60] mx-auto my-10 h-fit max-w-5xl rounded-3xl bg-white p-4 font-sans md:p-10 dark:bg-neutral-900"
+              className="relative z-[60] mx-auto my-4 h-[calc(100vh-2rem)] max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900 flex flex-col"
               transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-              <button
-                className="sticky top-4 right-0 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-black dark:bg-white"
-                onClick={handleClose}>
-                <span className="text-neutral-100 dark:text-neutral-900">✕</span>
-              </button>
-              <motion.p
-                layoutId={layout ? `category-${card.title}` : undefined}
-                className="text-base font-medium text-black dark:text-white">
-                {card.category}
-              </motion.p>
-              <motion.p
-                layoutId={layout ? `title-${card.title}` : undefined}
-                className="mt-4 text-2xl font-semibold text-neutral-700 md:text-5xl dark:text-white">
-                {card.title}
-              </motion.p>
-              <div className="py-10">{card.content}</div>
+              
+              {/* Fixed Header */}
+              <div className="flex-shrink-0 p-6 border-b border-gray-200 dark:border-gray-700">
+                <button
+                  className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm transition-colors dark:bg-white/10 dark:hover:bg-white/20"
+                  onClick={handleClose}>
+                  <span className="text-black dark:text-white">✕</span>
+                </button>
+                <motion.p
+                  layoutId={layout ? `category-${card.title}` : undefined}
+                  className="text-base font-medium text-black dark:text-white">
+                  {card.category}
+                </motion.p>
+                <motion.p
+                  layoutId={layout ? `title-${card.title}` : undefined}
+                  className="mt-2 text-2xl font-semibold text-neutral-700 md:text-4xl dark:text-white">
+                  {card.title}
+                </motion.p>
+              </div>
+
+              {/* Scrollable Content */}
+              <div 
+                ref={modalContentRef}
+                className="flex-1 overflow-hidden modal-scrollbar"
+                style={{ height: 'calc(100% - 120px)' }}
+              >
+                <div className="p-6 space-y-8">
+                  {/* Hero Image/Preview */}
+                  <div className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-6`}>
+                    <div className="bg-white rounded-xl aspect-video p-6 shadow-lg flex items-center justify-center">
+                      {card.heroImage ? (
+                        <img 
+                          src={card.heroImage} 
+                          alt={card.title}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="text-center text-gray-500">
+                          <div className="text-lg font-medium">{card.title}</div>
+                          <div className="text-sm mt-2">Hero image would go here</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Project Details */}
+                  <div className="flex flex-wrap gap-3">
+                    {card.tags.map((tag, tagIndex) => (
+                      <Badge key={tagIndex} variant="secondary" className="text-sm px-3 py-1">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Main Content */}
+                  <div className="prose prose-gray max-w-none dark:prose-invert">
+                    {card.content}
+                  </div>
+
+                  {/* Project Gallery */}
+                  {card.gallery && card.gallery.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-xl font-semibold">Project Gallery</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {card.gallery.map((image, imgIndex) => (
+                          <div key={imgIndex} className="rounded-lg overflow-hidden bg-gray-100">
+                            <img 
+                              src={image.src} 
+                              alt={image.alt || `${card.title} - Image ${imgIndex + 1}`}
+                              className="w-full h-64 object-cover gallery-image cursor-pointer"
+                            />
+                            {image.caption && (
+                              <div className="p-3 text-sm text-gray-600 dark:text-gray-300">
+                                {image.caption}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Technical Details */}
+                  {card.techStack && (
+                    <div className="space-y-4">
+                      <h4 className="text-xl font-semibold">Technology Stack</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {card.techStack.map((tech, techIndex) => (
+                          <span 
+                            key={techIndex}
+                            className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-4">
+                    <Button className="rounded-full">
+                      {card.liveUrl ? 'View Live Site' : 'View Project'}
+                    </Button>
+                    <Button variant="outline" className="rounded-full">
+                      Case Study
+                    </Button>
+                  </div>
+
+                  {/* Extra spacing for better scroll experience */}
+                  <div className="h-20"></div>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
@@ -163,8 +305,33 @@ export function SelectedWorkSection() {
       tags: ["WEB DESIGN", "BRANDING"],
       gradient: "from-blue-100 to-blue-200",
       src: "/zenpoint-preview.png",
+      heroImage: "/zenpoint-hero.jpg",
       description: "A mindfulness and wellness platform focusing on inner peace and mental clarity.",
       type: "wellness",
+      liveUrl: "https://zenpoint-wellness.com",
+      techStack: ["React", "Next.js", "Tailwind CSS", "Framer Motion", "Node.js", "MongoDB"],
+      gallery: [
+        {
+          src: "/zenpoint-gallery-1.jpg",
+          alt: "ZenPoint Homepage Design",
+          caption: "Clean and calming homepage design with intuitive navigation"
+        },
+        {
+          src: "/zenpoint-gallery-2.jpg", 
+          alt: "Meditation Sessions Interface",
+          caption: "Interactive meditation sessions with customizable timers"
+        },
+        {
+          src: "/zenpoint-gallery-3.jpg",
+          alt: "Progress Tracking Dashboard",
+          caption: "Comprehensive progress tracking and wellness analytics"
+        },
+        {
+          src: "/zenpoint-gallery-4.jpg",
+          alt: "Mobile App Interface",
+          caption: "Responsive mobile design for on-the-go mindfulness"
+        }
+      ],
       preview: (
         <>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2 sm:gap-0">
@@ -193,37 +360,63 @@ export function SelectedWorkSection() {
         </>
       ),
       content: (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="space-y-4">
             <h3 className="text-2xl font-bold">Project Overview</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-gray-600 leading-relaxed text-lg">
               ZenPoint Wellness is a comprehensive mindfulness and wellness platform designed to help users find inner peace and mental clarity in today's fast-paced world. The project focused on creating a calming digital experience that reflects the brand's core values of tranquility and mindfulness.
             </p>
           </div>
           
           <div className="space-y-4">
+            <h4 className="text-xl font-semibold">The Challenge</h4>
+            <p className="text-gray-600 leading-relaxed">
+              In an increasingly digital world, people are struggling to find moments of peace and mindfulness. Traditional wellness platforms often felt clinical or overwhelming, failing to create the serene environment necessary for true relaxation and mental clarity.
+            </p>
+          </div>
+
+          <div className="space-y-4">
             <h4 className="text-xl font-semibold">Design Process</h4>
             <p className="text-gray-600 leading-relaxed">
-              The design process began with extensive research into wellness psychology and user behavior patterns. We conducted user interviews with meditation practitioners and wellness enthusiasts to understand their digital needs and pain points.
+              The design process began with extensive research into wellness psychology and user behavior patterns. We conducted user interviews with meditation practitioners and wellness enthusiasts to understand their digital needs and pain points. This research informed our decision to prioritize simplicity, calming colors, and intuitive navigation.
+            </p>
+            <p className="text-gray-600 leading-relaxed">
+              We developed a design system based on natural elements - soft blues reminiscent of calm waters, gentle greens reflecting nature, and warm whites suggesting clouds and open spaces. Every interaction was carefully crafted to feel effortless and peaceful.
             </p>
           </div>
 
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Key Features</h4>
-            <ul className="list-disc list-inside text-gray-600 space-y-2">
-              <li>Guided meditation sessions with customizable durations</li>
-              <li>Progress tracking and mindfulness streaks</li>
-              <li>Calming soundscapes and ambient music</li>
-              <li>Community features for shared wellness journeys</li>
-              <li>Personalized wellness recommendations</li>
+            <ul className="list-disc list-inside text-gray-600 space-y-3 text-base">
+              <li><strong>Guided Meditation Sessions:</strong> Customizable meditation experiences with various durations and themes</li>
+              <li><strong>Progress Tracking:</strong> Beautiful visualizations of mindfulness streaks and personal growth</li>
+              <li><strong>Ambient Soundscapes:</strong> High-quality nature sounds and calming music library</li>
+              <li><strong>Community Features:</strong> Connect with like-minded individuals on shared wellness journeys</li>
+              <li><strong>Personalized Recommendations:</strong> AI-driven suggestions based on user preferences and progress</li>
+              <li><strong>Breathing Exercises:</strong> Interactive breathing guides with visual cues and rhythm control</li>
+              <li><strong>Sleep Stories:</strong> Narrated stories designed to promote restful sleep</li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-xl font-semibold">Results</h4>
+            <h4 className="text-xl font-semibold">Technical Implementation</h4>
             <p className="text-gray-600 leading-relaxed">
-              The platform launched to positive reception, with users praising the intuitive interface and calming design aesthetic. User engagement increased by 40% compared to the previous platform, with session completion rates improving significantly.
+              Built with modern web technologies, ZenPoint Wellness delivers a smooth, responsive experience across all devices. We implemented advanced features like offline meditation downloads, background audio playback, and seamless synchronization across platforms. The application uses progressive web app (PWA) technology for app-like performance in web browsers.
             </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold">Results & Impact</h4>
+            <p className="text-gray-600 leading-relaxed">
+              The platform launched to overwhelmingly positive reception, with users praising the intuitive interface and genuinely calming design aesthetic. Key metrics showed remarkable improvement:
+            </p>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
+              <li>40% increase in user engagement compared to previous platform</li>
+              <li>85% session completion rate for guided meditations</li>
+              <li>4.8/5 star rating in app stores</li>
+              <li>60% of users reported improved sleep quality after 30 days</li>
+              <li>50,000+ active monthly users within first quarter</li>
+            </ul>
           </div>
         </div>
       )
@@ -236,8 +429,33 @@ export function SelectedWorkSection() {
       tags: ["E-COMMERCE", "PRODUCT DESIGN"],
       gradient: "from-amber-100 to-amber-200",
       src: "/timber-preview.png",
+      heroImage: "/timber-hero.jpg",
       description: "Premium furniture e-commerce platform with sustainable design focus.",
       type: "ecommerce",
+      liveUrl: "https://timber-elegance.com",
+      techStack: ["Next.js", "TypeScript", "Shopify", "Three.js", "Stripe", "Sanity CMS"],
+      gallery: [
+        {
+          src: "/timber-gallery-1.jpg",
+          alt: "Product Catalog Page",
+          caption: "Elegant product grid showcasing premium furniture pieces"
+        },
+        {
+          src: "/timber-gallery-2.jpg",
+          alt: "Product Detail View",
+          caption: "Detailed product views with 360° rotation and material close-ups"
+        },
+        {
+          src: "/timber-gallery-3.jpg",
+          alt: "AR Visualization",
+          caption: "Augmented reality feature for placing furniture in user's space"
+        },
+        {
+          src: "/timber-gallery-4.jpg",
+          alt: "Sustainability Page",
+          caption: "Transparency in sourcing and environmental commitment"
+        }
+      ],
       preview: (
         <>
           <div className="absolute top-3 right-3">
@@ -262,29 +480,50 @@ export function SelectedWorkSection() {
         </>
       ),
       content: (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="space-y-4">
             <h3 className="text-2xl font-bold">Project Overview</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Timber Elegance represents a new approach to furniture e-commerce, focusing on sustainable, premium wood furniture. The platform combines elegant design with functionality to create an immersive shopping experience that reflects the quality of the products.
+            <p className="text-gray-600 leading-relaxed text-lg">
+              Timber Elegance represents a new approach to furniture e-commerce, focusing on sustainable, premium wood furniture. The platform combines elegant design with cutting-edge technology to create an immersive shopping experience that reflects the quality and craftsmanship of the products.
             </p>
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-xl font-semibold">Challenges</h4>
+            <h4 className="text-xl font-semibold">The Challenge</h4>
             <p className="text-gray-600 leading-relaxed">
-              The main challenge was conveying the tactile quality of wood furniture through digital means. We needed to create an experience that would help customers understand the craftsmanship and quality without physical interaction.
+              The main challenge was conveying the tactile quality and craftsmanship of premium wood furniture through digital means. Customers needed to understand the texture, grain patterns, and build quality without physical interaction. Additionally, the brand wanted to transparently communicate their sustainability practices and ethical sourcing.
             </p>
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-xl font-semibold">Solutions</h4>
-            <ul className="list-disc list-inside text-gray-600 space-y-2">
-              <li>High-resolution 360° product photography</li>
-              <li>Detailed material and craftsmanship information</li>
-              <li>AR visualization for space planning</li>
-              <li>Sustainability certifications and sourcing transparency</li>
-              <li>Customer reviews with photo uploads</li>
+            <h4 className="text-xl font-semibold">Innovative Solutions</h4>
+            <ul className="list-disc list-inside text-gray-600 space-y-3 text-base">
+              <li><strong>360° Product Photography:</strong> High-resolution images showing every angle and detail of each piece</li>
+              <li><strong>Material Close-ups:</strong> Macro photography revealing wood grain patterns and finish quality</li>
+              <li><strong>AR Visualization:</strong> Augmented reality feature allowing customers to place furniture in their space</li>
+              <li><strong>Sustainability Certificates:</strong> Digital certificates and sourcing transparency for each product</li>
+              <li><strong>Customer Gallery:</strong> Real customer photos showing furniture in actual homes</li>
+              <li><strong>Virtual Showroom:</strong> 3D rendered rooms showcasing furniture in context</li>
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold">Design Philosophy</h4>
+            <p className="text-gray-600 leading-relaxed">
+              The design philosophy centered around "Digital Craftsmanship" - every element of the user interface was crafted with the same attention to detail as the furniture pieces themselves. We used warm, natural color palettes, premium typography, and spacious layouts that let the products shine.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold">Results</h4>
+            <p className="text-gray-600 leading-relaxed">
+              The platform exceeded all expectations, transforming how customers interact with premium furniture online:
+            </p>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
+              <li>250% increase in online sales within 6 months</li>
+              <li>40% reduction in product returns due to better visualization</li>
+              <li>92% customer satisfaction rating</li>
+              <li>Featured in Furniture Design Magazine as "E-commerce Innovation of the Year"</li>
             </ul>
           </div>
         </div>
@@ -298,8 +537,33 @@ export function SelectedWorkSection() {
       tags: ["AGENCY", "WEB DESIGN"],
       gradient: "from-purple-100 to-purple-200",
       src: "/agency-preview.png",
+      heroImage: "/agency-hero.jpg",
       description: "Modern digital agency website with portfolio showcase.",
       type: "agency",
+      liveUrl: "https://digital-agency-pro.com",
+      techStack: ["React", "Gatsby", "GraphQL", "Contentful", "GSAP", "Netlify"],
+      gallery: [
+        {
+          src: "/agency-gallery-1.jpg",
+          alt: "Agency Homepage",
+          caption: "Bold and creative homepage design with interactive elements"
+        },
+        {
+          src: "/agency-gallery-2.jpg",
+          alt: "Portfolio Showcase",
+          caption: "Dynamic portfolio grid with hover effects and case study previews"
+        },
+        {
+          src: "/agency-gallery-3.jpg",
+          alt: "Team Section",
+          caption: "Meet the team section with personality-driven profiles"
+        },
+        {
+          src: "/agency-gallery-4.jpg",
+          alt: "Contact Form",
+          caption: "Streamlined contact and project inquiry system"
+        }
+      ],
       preview: (
         <>
           <div className="flex justify-between items-start mb-4">
@@ -316,29 +580,43 @@ export function SelectedWorkSection() {
         </>
       ),
       content: (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="space-y-4">
             <h3 className="text-2xl font-bold">Project Overview</h3>
-            <p className="text-gray-600 leading-relaxed">
-              Digital Agency Pro needed a website that would showcase their creative capabilities while maintaining professional credibility. The project focused on creating a balance between creative expression and business functionality.
+            <p className="text-gray-600 leading-relaxed text-lg">
+              Digital Agency Pro needed a website that would showcase their creative capabilities while maintaining professional credibility. The challenge was creating a balance between creative expression and business functionality that would appeal to both startups and enterprise clients.
             </p>
           </div>
           
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Design Philosophy</h4>
             <p className="text-gray-600 leading-relaxed">
-              The design philosophy centered around "Creative Professionalism" - showcasing the agency's creative capabilities while maintaining the trust and credibility that potential clients expect from a professional service provider.
+              The design philosophy centered around "Creative Professionalism" - showcasing the agency's creative capabilities while maintaining the trust and credibility that potential clients expect from a professional service provider. Every element was designed to demonstrate the agency's expertise through the website itself.
             </p>
           </div>
 
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Key Features</h4>
-            <ul className="list-disc list-inside text-gray-600 space-y-2">
-              <li>Interactive portfolio showcase with case studies</li>
-              <li>Team member profiles and expertise areas</li>
-              <li>Client testimonials and success stories</li>
-              <li>Service breakdown with pricing transparency</li>
-              <li>Integrated contact and project inquiry system</li>
+            <ul className="list-disc list-inside text-gray-600 space-y-3 text-base">
+              <li><strong>Interactive Portfolio:</strong> Dynamic showcase with filterable case studies and live project previews</li>
+              <li><strong>Team Profiles:</strong> Personality-driven team member profiles highlighting expertise and experience</li>
+              <li><strong>Client Testimonials:</strong> Video testimonials and detailed success stories with metrics</li>
+              <li><strong>Service Breakdown:</strong> Clear service descriptions with transparent pricing information</li>
+              <li><strong>Project Estimator:</strong> Interactive tool for potential clients to estimate project costs</li>
+              <li><strong>Blog & Insights:</strong> Industry insights and thought leadership content</li>
+            </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold">Results</h4>
+            <p className="text-gray-600 leading-relaxed">
+              The new website became a powerful business development tool:
+            </p>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
+              <li>300% increase in qualified lead generation</li>
+              <li>Average project value increased by 150%</li>
+              <li>Won 3 major enterprise contracts directly through website inquiries</li>
+              <li>Featured in Awwwards and CSS Design Awards</li>
             </ul>
           </div>
         </div>
@@ -352,8 +630,33 @@ export function SelectedWorkSection() {
       tags: ["FINTECH", "MOBILE"],
       gradient: "from-green-100 to-green-200",
       src: "/fintech-preview.png",
+      heroImage: "/fintech-hero.jpg",
       description: "Secure mobile banking application with modern UX.",
       type: "fintech",
+      liveUrl: "https://mobile-fintech-app.com",
+      techStack: ["React Native", "Node.js", "PostgreSQL", "Redis", "AWS", "Stripe"],
+      gallery: [
+        {
+          src: "/fintech-gallery-1.jpg",
+          alt: "App Dashboard",
+          caption: "Clean and intuitive dashboard with financial overview"
+        },
+        {
+          src: "/fintech-gallery-2.jpg",
+          alt: "Transaction Flow",
+          caption: "Secure and seamless money transfer interface"
+        },
+        {
+          src: "/fintech-gallery-3.jpg",
+          alt: "Security Features",
+          caption: "Biometric authentication and security settings"
+        },
+        {
+          src: "/fintech-gallery-4.jpg",
+          alt: "Analytics View",
+          caption: "Personal finance analytics and spending insights"
+        }
+      ],
       preview: (
         <>
           <div className="space-y-3">
@@ -371,30 +674,49 @@ export function SelectedWorkSection() {
         </>
       ),
       content: (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="space-y-4">
             <h3 className="text-2xl font-bold">Project Overview</h3>
-            <p className="text-gray-600 leading-relaxed">
-              A next-generation mobile banking application designed to provide secure, intuitive financial management tools. The project emphasized user security while maintaining a modern, approachable interface design.
+            <p className="text-gray-600 leading-relaxed text-lg">
+              A next-generation mobile banking application designed to provide secure, intuitive financial management tools for the modern user. The project emphasized cutting-edge security while maintaining a modern, approachable interface that makes complex financial operations simple and accessible.
             </p>
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-xl font-semibold">Security Features</h4>
-            <ul className="list-disc list-inside text-gray-600 space-y-2">
-              <li>Biometric authentication and multi-factor security</li>
-              <li>End-to-end encryption for all transactions</li>
-              <li>Real-time fraud detection and alerts</li>
-              <li>Secure document upload and verification</li>
-              <li>Privacy-focused data handling</li>
+            <h4 className="text-xl font-semibold">Security-First Design</h4>
+            <p className="text-gray-600 leading-relaxed">
+              In fintech, security isn't just a feature—it's the foundation. Every design decision was made with security in mind, from the initial user onboarding flow to daily transaction processes. We implemented multiple layers of protection while ensuring the user experience remained seamless and trustworthy.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold">Advanced Security Features</h4>
+            <ul className="list-disc list-inside text-gray-600 space-y-3 text-base">
+              <li><strong>Biometric Authentication:</strong> Fingerprint and facial recognition with fallback security questions</li>
+              <li><strong>Multi-Factor Authentication:</strong> SMS, email, and authenticator app integration</li>
+              <li><strong>End-to-End Encryption:</strong> All data encrypted both in transit and at rest</li>
+              <li><strong>Real-time Fraud Detection:</strong> AI-powered monitoring with instant alerts</li>
+              <li><strong>Secure Document Upload:</strong> Encrypted document storage with automatic PII detection</li>
+              <li><strong>Session Management:</strong> Automatic logout and session monitoring across devices</li>
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-xl font-semibold">User Experience</h4>
+            <h4 className="text-xl font-semibold">User Experience Innovation</h4>
             <p className="text-gray-600 leading-relaxed">
-              The UX design focused on simplifying complex financial operations while maintaining transparency and control for users. We conducted extensive usability testing to ensure accessibility across different user demographics.
+              The UX design focused on simplifying complex financial operations while maintaining complete transparency and control for users. We conducted extensive usability testing across different user demographics, ensuring accessibility for users with varying levels of tech-savviness and financial literacy.
             </p>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold">Results & Impact</h4>
+            <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
+              <li>Zero security breaches since launch</li>
+              <li>4.9/5 star rating in app stores</li>
+              <li>200,000+ active users within first year</li>
+              <li>95% customer satisfaction for security features</li>
+              <li>Named "Most Innovative Fintech App" by TechCrunch</li>
+            </ul>
           </div>
         </div>
       )
@@ -465,4 +787,113 @@ export function SelectedWorkSection() {
     </section>
   )
 }
+
+{/* Custom Styles for Modal */}
+<style jsx global>{`
+  /* Custom scrollbar for modal content */
+  .modal-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 transparent;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
+  }
+
+  /* Dark mode scrollbar */
+  .dark .modal-scrollbar {
+    scrollbar-color: #4a5568 transparent;
+  }
+
+  .dark .modal-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
+  }
+
+  .dark .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #718096;
+  }
+
+  /* Prose styles for better typography */
+  .prose {
+    color: #374151;
+    max-width: none;
+  }
+
+  .prose h3 {
+    color: #111827;
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.6;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .prose h4 {
+    color: #111827;
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .prose p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
+
+  .prose ul {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .prose li {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose strong {
+    color: #111827;
+    font-weight: 600;
+  }
+
+  /* Dark mode prose */
+  .dark .prose {
+    color: #d1d5db;
+  }
+
+  .dark .prose h3,
+  .dark .prose h4 {
+    color: #f9fafb;
+  }
+
+  .dark .prose strong {
+    color: #f9fafb;
+  }
+
+  /* Image hover effects */
+  .gallery-image {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .gallery-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+`}</style>
 

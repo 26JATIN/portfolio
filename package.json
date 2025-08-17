@@ -13,6 +13,7 @@
     "@studio-freight/lenis": "^1.0.42",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.23.12",
     "geist": "^1.4.2",
     "lucide-react": "^0.539.0",
     "next": "15.4.6",
