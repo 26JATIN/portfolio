@@ -246,8 +246,21 @@ export const Card = ({
             borderRadius: '24px 24px 4px 24px'
           }}
         >
-          <div className="bg-white dark:bg-gray-800 h-full p-3 sm:p-4 shadow-lg relative" style={{ borderRadius: '16px 16px 2px 16px' }}>
-            {card.preview}
+          <div className="bg-white dark:bg-gray-800 h-full shadow-lg relative overflow-hidden" style={{ borderRadius: '16px 16px 2px 16px' }}>
+            {card.heroImage ? (
+              <img 
+                src={card.heroImage} 
+                alt={card.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <div className="text-center text-gray-500 dark:text-gray-400 p-4">
+                  <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
+                  <div className="text-xs sm:text-sm">Hero image will appear here</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
