@@ -10,6 +10,7 @@ import React, {
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/use-outside-click";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import Lenis from '@studio-freight/lenis'
@@ -108,6 +109,7 @@ export const Card = React.memo(({
   const containerRef = useRef(null);
   const modalContentRef = useRef(null);
   const modalLenisRef = useRef(null);
+  const isMobile = useIsMobile();
 
   // Memoize the card preview to prevent unnecessary re-renders
   const cardPreview = useMemo(() => (
@@ -176,14 +178,14 @@ export const Card = React.memo(({
         modalLenisRef.current = new Lenis({
           wrapper: modalContentRef.current,
           content: modalContentRef.current.firstChild,
-          duration: 1.2,
+          duration: isMobile ? 0.8 : 1.2,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           direction: 'vertical',
           gestureDirection: 'vertical',
           smooth: true,
           mouseMultiplier: 1,
-          smoothTouch: false,
-          touchMultiplier: 2,
+          smoothTouch: true, // Enable smooth touch scrolling on mobile
+          touchMultiplier: isMobile ? 1.5 : 2, // Adjusted for better mobile experience
           infinite: false,
         })
 
@@ -203,7 +205,7 @@ export const Card = React.memo(({
         modalLenisRef.current = null
       }
     }
-  }, [open])
+  }, [open, isMobile])
 
   useOutsideClick(containerRef, () => handleClose());
 
@@ -238,7 +240,7 @@ export const Card = React.memo(({
               exit={{ opacity: 0, scale: 0.9 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className="relative z-[60] mx-auto my-4 h-[calc(100vh-2rem)] max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900 flex flex-col"
+              className={`relative z-[60] mx-auto my-4 h-[calc(100vh-2rem)] max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900 flex flex-col ${isMobile ? 'mx-2' : ''}`}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}>
               
               {/* Fixed Header */}
@@ -263,8 +265,12 @@ export const Card = React.memo(({
               {/* Scrollable Content */}
               <div 
                 ref={modalContentRef}
-                className="flex-1 overflow-hidden modal-scrollbar"
-                style={{ height: 'calc(100% - 120px)' }}
+                className={`flex-1 overflow-auto modal-scrollbar ${isMobile ? 'touch-pan-y' : ''}`}
+                style={{ 
+                  height: 'calc(100% - 120px)',
+                  WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
+                  overscrollBehavior: 'contain' // Prevent overscroll bounce
+                }}
               >
                 <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
                   {/* Hero Image/Preview */}
@@ -1077,6 +1083,17 @@ export function SelectedWorkSection() {
   .modal-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e0 transparent;
+    /* Enhanced mobile scrolling */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Better mobile touch handling */
+  @media (max-width: 768px) {
+    .modal-scrollbar {
+      overflow-y: scroll !important;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
   .modal-scrollbar::-webkit-scrollbar {
