@@ -14,14 +14,14 @@ export function ServicesSection() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.target === sectionRef.current) {
-            setIsVisible(entry.isIntersecting)
+          if (entry.target === sectionRef.current && entry.isIntersecting) {
+            setIsVisible(true)
           }
-          if (entry.target === missionRef.current) {
-            setMissionVisible(entry.isIntersecting)
+          if (entry.target === missionRef.current && entry.isIntersecting) {
+            setMissionVisible(true)
           }
-          if (entry.target === servicesRef.current) {
-            setServicesVisible(entry.isIntersecting)
+          if (entry.target === servicesRef.current && entry.isIntersecting) {
+            setServicesVisible(true)
           }
         })
       },
