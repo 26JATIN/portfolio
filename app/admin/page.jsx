@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 export default function AdminLogin() {
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const router = useRouter()
@@ -18,18 +19,40 @@ export default function AdminLogin() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setSuccess('')
     
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Simple client-side validation (replace with backend later)
-    if (credentials.email === 'admin@example.com' && credentials.password === 'admin123') {
-      localStorage.setItem('adminAuth', 'true')
-      router.push('/admin/dashboard')
-    } else {
-      setError('Invalid credentials')
+    try {
+      console.log('Attempting login with:', { email: credentials.email, password: '***' })
+      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      })
+
+      const data = await response.json()
+      console.log('Login response:', { status: response.status, data })
+
+      if (response.ok) {
+        // Login successful
+        console.log('Login successful, redirecting to dashboard')
+        setSuccess('Login successful! Redirecting...')
+        // Use window.location to ensure cookie is available for middleware
+        setTimeout(() => {
+          window.location.href = '/admin/dashboard'
+        }, 500)
+      } else {
+        console.error('Login failed:', data)
+        setError(data.error || 'Login failed')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('Network error. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -120,6 +143,16 @@ export default function AdminLogin() {
               </motion.div>
             )}
 
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm"
+              >
+                {success}
+              </motion.div>
+            )}
+
             <motion.button
               type="submit"
               disabled={isLoading}
@@ -147,7 +180,7 @@ export default function AdminLogin() {
           >
             <p className="text-sm text-blue-700 font-medium mb-2">Demo Credentials:</p>
             <div className="text-sm text-blue-600 space-y-1">
-              <p>Email: admin@example.com</p>
+              <p>Email: admin@test.com</p>
               <p>Password: admin123</p>
             </div>
           </motion.div>

@@ -6,14 +6,27 @@ import { motion } from 'framer-motion'
 export default function AdminDashboard() {
   const router = useRouter()
   const [isVisible, setIsVisible] = useState(false)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('adminAuth')
-    if (!isAuthenticated) {
-      router.push('/admin')
-    }
+    checkAuth()
     setIsVisible(true)
   }, [router])
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/verify')
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+      } else {
+        router.push('/admin')
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      router.push('/admin')
+    }
+  }
 
   const stats = [
     {

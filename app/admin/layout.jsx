@@ -10,6 +10,7 @@ export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
   const [darkMode, setDarkMode] = useState(true) // Default to dark mode
+  const [user, setUser] = useState(null)
   const mainContentRef = useRef(null)
   const lenisRef = useRef(null)
   
@@ -24,7 +25,33 @@ export default function AdminLayout({ children }) {
       setDarkMode(false)
       document.documentElement.classList.remove('dark')
     }
-  }, [])
+
+    // Check authentication status
+    if (pathname !== '/admin') {
+      checkAuth()
+    }
+  }, [pathname])
+
+  const checkAuth = async () => {
+    try {
+      console.log('Checking authentication...')
+      const response = await fetch('/api/auth/verify')
+      console.log('Auth check response:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Auth check successful:', data.user)
+        setUser(data.user)
+      } else {
+        console.log('Auth check failed, redirecting to login')
+        // Not authenticated, redirect to login
+        window.location.href = '/admin'
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      window.location.href = '/admin'
+    }
+  }
 
   // Initialize Lenis for admin content
   useEffect(() => {
@@ -245,24 +272,31 @@ export default function AdminLayout({ children }) {
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-700 rounded-xl flex items-center justify-center">
-                    <span className="text-white font-medium">JD</span>
+                    <span className="text-white font-medium">
+                      {user?.name?.charAt(0) || user?.email?.charAt(0) || 'A'}
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${
                       darkMode ? 'text-white' : 'text-gray-900'
-                    }`}>John Doe</p>
+                    }`}>{user?.name || 'Admin User'}</p>
                     <p className={`text-xs truncate ${
                       darkMode ? 'text-gray-500' : 'text-gray-500'
-                    }`}>Admin</p>
+                    }`}>{user?.email || 'admin@test.com'}</p>
                   </div>
                 </div>
               </motion.div>
             )}
             
             <button
-              onClick={() => {
-                localStorage.removeItem('adminAuth')
-                window.location.href = '/admin'
+              onClick={async () => {
+                try {
+                  await fetch('/api/auth/logout', { method: 'POST' })
+                  window.location.href = '/admin'
+                } catch (error) {
+                  console.error('Logout error:', error)
+                  window.location.href = '/admin'
+                }
               }}
               className={`w-full flex items-center ${sidebarOpen ? 'justify-start space-x-3 px-4' : 'justify-center'} py-3 text-red-500 rounded-2xl transition-all duration-300 group ${
                 darkMode ? 'hover:bg-red-900/20' : 'hover:bg-red-50'
