@@ -67,12 +67,12 @@ export function ContactSection() {
             </Badge>
 
             <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[0.85] tracking-tight text-foreground">
-              Get in
+              Get in{" "}
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
-                touch
+                touch 
               </span>
               <span className="relative">
-                with me
+                {" "}with me
                 <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-muted-foreground/60">©</span>
               </span>
             </h2>

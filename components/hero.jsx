@@ -120,7 +120,7 @@ export function HeroSection() {
                 transition={{ duration: 0.8, delay: 0.3 }}
               >
                 <WobbleCard
-                  containerClassName="min-h-[175px] bg-purple-600"
+                  containerClassName={`min-h-[175px] ${theme === 'light' ? 'bg-purple-900' : 'bg-purple-800'}`}
                   className="p-6"
                 >
                   <div className="flex items-start">
@@ -161,19 +161,19 @@ export function HeroSection() {
                 className="grid grid-cols-2 gap-4"
               >
                 <WobbleCard
-                  containerClassName="min-h-[120px] bg-green-500"
+                  containerClassName={`min-h-[120px] ${theme === 'light' ? 'bg-green-800' : 'bg-green-700'}`}
                   className="p-6"
                 >
                   <div className="text-3xl font-bold mb-1 text-white">20+</div>
-                  <div className="text-sm text-green-100">Projects built</div>
+                  <div className={`text-sm ${theme === 'light' ? 'text-slate-300' : 'text-green-100'}`}>Projects built</div>
                 </WobbleCard>
                 
                 <WobbleCard
-                  containerClassName="min-h-[120px] bg-indigo-500"
+                  containerClassName={`min-h-[120px] ${theme === 'light' ? 'bg-indigo-800' : 'bg-indigo-700'}`}
                   className="p-6"
                 >
                   <div className="text-3xl font-bold mb-1 text-white">3+</div>
-                  <div className="text-sm text-indigo-100">Years coding</div>
+                  <div className={`text-sm ${theme === 'light' ? 'text-gray-300' : 'text-indigo-100'}`}>Years coding</div>
                 </WobbleCard>
               </motion.div>
 
@@ -184,10 +184,10 @@ export function HeroSection() {
                 transition={{ duration: 0.8, delay: 0.7 }}
               >
                 <WobbleCard
-                  containerClassName="min-h-[200px] bg-pink-600"
+                  containerClassName={`min-h-[200px] ${theme === 'light' ? 'bg-pink-900' : 'bg-pink-800'}`}
                   className="p-6"
                 >
-                  <p className="text-sm mb-4 font-medium text-pink-100">
+                  <p className={`text-sm mb-4 font-medium ${theme === 'light' ? 'text-zinc-300' : 'text-pink-100'}`}>
                     Technical expertise
                   </p>
                   <div className="space-y-3">
