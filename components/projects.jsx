@@ -77,14 +77,14 @@ const GallerySection = React.memo(({ gallery, title }) => {
       <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {gallery.map((image, imgIndex) => (
-          <div key={imgIndex} className="rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+          <div key={imgIndex} className="rounded-lg overflow-hidden bg-transparent">
             <LazyImage 
               src={image.src} 
               alt={image.alt || `${title} - Image ${imgIndex + 1}`}
               className="w-full h-48 sm:h-56 lg:h-64 object-cover gallery-image cursor-pointer transition-transform duration-300 hover:scale-105"
             />
             {image.caption && (
-              <div className="p-3 text-sm text-gray-600 dark:text-gray-300">
+              <div className="font-bold p-3 text-sm text-gray-600 dark:text-gray-300">
                 {image.caption}
               </div>
             )}
