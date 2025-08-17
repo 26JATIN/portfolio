@@ -4,6 +4,8 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useCallback,
+  useMemo,
 } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,16 +14,142 @@ import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import Lenis from '@studio-freight/lenis'
 
-export const Card = ({
+// Lazy loading image component
+const LazyImage = React.memo(({ src, alt, className, placeholder, onLoad, ...props }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
+    onLoad?.();
+  }, [onLoad]);
+
+  return (
+    <div ref={imgRef} className={`relative overflow-hidden ${className || ''}`} {...props}>
+      {isInView && (
+        <>
+          <img
+            src={src}
+            alt={alt}
+            className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className || ''}`}
+            onLoad={handleLoad}
+            loading="lazy"
+          />
+          {!isLoaded && (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </>
+      )}
+      {!isInView && (
+        <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+      )}
+    </div>
+  );
+});
+
+LazyImage.displayName = 'LazyImage';
+
+// Separate Gallery component for better performance
+const GallerySection = React.memo(({ gallery, title }) => {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        {gallery.map((image, imgIndex) => (
+          <div key={imgIndex} className="rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <LazyImage 
+              src={image.src} 
+              alt={image.alt || `${title} - Image ${imgIndex + 1}`}
+              className="w-full h-48 sm:h-56 lg:h-64 object-cover gallery-image cursor-pointer transition-transform duration-300 hover:scale-105"
+            />
+            {image.caption && (
+              <div className="p-3 text-sm text-gray-600 dark:text-gray-300">
+                {image.caption}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+GallerySection.displayName = 'GallerySection';
+
+export const Card = React.memo(({
   card,
   index,
   layout = false,
   onClick
 }) => {
   const [open, setOpen] = useState(false);
+  const [galleryLoaded, setGalleryLoaded] = useState(false);
   const containerRef = useRef(null);
   const modalContentRef = useRef(null);
   const modalLenisRef = useRef(null);
+
+  // Memoize the card preview to prevent unnecessary re-renders
+  const cardPreview = useMemo(() => (
+    <div 
+      className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} p-4 sm:p-6 aspect-[4/3] overflow-hidden`}
+      style={{
+        borderRadius: '24px 24px 4px 24px'
+      }}
+    >
+      <div className="bg-white dark:bg-gray-800 h-full shadow-lg relative overflow-hidden" style={{ borderRadius: '16px 16px 2px 16px' }}>
+        {card.heroImage ? (
+          <LazyImage 
+            src={card.heroImage} 
+            alt={card.title}
+            className="w-full h-full object-cover"
+            placeholder={
+              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <div className="text-center text-gray-500 dark:text-gray-400 p-4">
+                  <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
+                  <div className="text-xs sm:text-sm">Loading image...</div>
+                </div>
+              </div>
+            }
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <div className="text-center text-gray-500 dark:text-gray-400 p-4">
+              <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
+              <div className="text-xs sm:text-sm">Hero image will appear here</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  ), [card.heroImage, card.title, card.gradient]);
+
+  // Load gallery images only when modal opens
+  useEffect(() => {
+    if (open && !galleryLoaded) {
+      setGalleryLoaded(true);
+    }
+  }, [open, galleryLoaded]);
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -142,7 +270,7 @@ export const Card = ({
                   {/* Hero Image/Preview */}
                   <div className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} rounded-2xl aspect-video p-4 sm:p-6 border-0 flex items-center justify-center`}>
                     {card.heroImage ? (
-                      <img 
+                      <LazyImage 
                         src={card.heroImage} 
                         alt={card.title}
                         className="w-full h-full object-cover rounded-lg border-0 outline-none"
@@ -173,27 +301,9 @@ export const Card = ({
                     {card.content}
                   </div>
 
-                  {/* Project Gallery */}
-                  {card.gallery && card.gallery.length > 0 && (
-                    <div className="space-y-4 sm:space-y-6">
-                      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        {card.gallery.map((image, imgIndex) => (
-                          <div key={imgIndex} className="rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                            <img 
-                              src={image.src} 
-                              alt={image.alt || `${card.title} - Image ${imgIndex + 1}`}
-                              className="w-full h-48 sm:h-56 lg:h-64 object-cover gallery-image cursor-pointer transition-transform duration-300 hover:scale-105"
-                            />
-                            {image.caption && (
-                              <div className="p-3 text-sm text-gray-600 dark:text-gray-300">
-                                {image.caption}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  {/* Project Gallery - Lazy loaded only when modal opens */}
+                  {galleryLoaded && card.gallery && card.gallery.length > 0 && (
+                    <GallerySection gallery={card.gallery} title={card.title} />
                   )}
 
                   {/* Technical Details */}
@@ -236,31 +346,9 @@ export const Card = ({
         whileHover={{ y: -8, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleOpen}
-        className="cursor-pointer"
+        className="cursor-pointer card-hover"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-        <div 
-          className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} p-4 sm:p-6 aspect-[4/3] overflow-hidden`}
-          style={{
-            borderRadius: '24px 24px 4px 24px'
-          }}
-        >
-          <div className="bg-white dark:bg-gray-800 h-full shadow-lg relative overflow-hidden" style={{ borderRadius: '16px 16px 2px 16px' }}>
-            {card.heroImage ? (
-              <img 
-                src={card.heroImage} 
-                alt={card.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                <div className="text-center text-gray-500 dark:text-gray-400 p-4">
-                  <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
-                  <div className="text-xs sm:text-sm">Hero image will appear here</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {cardPreview}
         <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-start gap-2">
@@ -288,7 +376,9 @@ export const Card = ({
       </motion.div>
     </>
   );
-};
+});
+
+Card.displayName = 'Card';
 
 export function SelectedWorkSection() {
   const [isVisible, setIsVisible] = useState(false)
@@ -296,6 +386,7 @@ export function SelectedWorkSection() {
   const [loading, setLoading] = useState(true)
   const sectionRef = useRef(null)
 
+  // Memoize intersection observer setup
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -313,11 +404,20 @@ export function SelectedWorkSection() {
     return () => observer.disconnect()
   }, [])
 
-  // Fetch published projects
+  // Fetch published projects with error handling and loading states
   useEffect(() => {
+    const controller = new AbortController();
+    
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/projects?published=true')
+        const response = await fetch('/api/projects?published=true', {
+          signal: controller.signal
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch projects')
+        }
+        
         const data = await response.json()
         
         if (data.success) {
@@ -431,13 +531,19 @@ export function SelectedWorkSection() {
           setProjects(transformedProjects)
         }
       } catch (error) {
-        console.error('Error fetching projects:', error)
+        if (error.name !== 'AbortError') {
+          console.error('Error fetching projects:', error)
+        }
       } finally {
         setLoading(false)
       }
     }
 
     fetchProjects()
+    
+    return () => {
+      controller.abort()
+    }
   }, [])
 
   const defaultProjects = [
@@ -868,7 +974,50 @@ export function SelectedWorkSection() {
   ]
 
   // Fallback projects for when API is not available or loading
-  const displayProjects = projects.length > 0 ? projects : defaultProjects
+  const displayProjects = useMemo(() => {
+    return projects.length > 0 ? projects : defaultProjects
+  }, [projects])
+
+  // Memoize loading skeleton
+  const loadingSkeleton = useMemo(() => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      {[...Array(4)].map((_, index) => (
+        <div key={index} className="animate-pulse">
+          <div className="bg-gray-200 dark:bg-gray-700 rounded-3xl aspect-[4/3] mb-4"></div>
+          <div className="space-y-2">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            <div className="flex gap-2">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ), [])
+
+  // Memoize rendered projects
+  const renderedProjects = useMemo(() => {
+    return displayProjects.map((project, index) => (
+      <motion.div
+        key={project.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        transition={{ 
+          duration: 0.6, 
+          delay: 0.9 + (index * 0.1),
+          ease: "easeOut" 
+        }}
+      >
+        <Card
+          card={project}
+          index={index}
+          layout={true}
+        />
+      </motion.div>
+    ));
+  }, [displayProjects, isVisible]);
 
   return (
     <section ref={sectionRef} className="bg-background">
@@ -904,21 +1053,7 @@ export function SelectedWorkSection() {
         <div className="w-full lg:w-4/5 overflow-y-auto">
           <div className="p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 sm:space-y-12">
             {loading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                {[...Array(4)].map((_, index) => (
-                  <div key={index} className="animate-pulse">
-                    <div className="bg-gray-200 dark:bg-gray-700 rounded-3xl aspect-[4/3] mb-4"></div>
-                    <div className="space-y-2">
-                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                      <div className="flex gap-2">
-                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              loadingSkeleton
             ) : (
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
@@ -926,24 +1061,7 @@ export function SelectedWorkSection() {
                 transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
               >
-                {displayProjects.map((project, index) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ 
-                      duration: 0.6, 
-                      delay: 0.9 + (index * 0.1),
-                      ease: "easeOut" 
-                    }}
-                  >
-                    <Card
-                    card={project}
-                    index={index}
-                    layout={true}
-                  />
-                </motion.div>
-              ))}
+                {renderedProjects}
               </motion.div>
             )}
           </div>
@@ -953,7 +1071,7 @@ export function SelectedWorkSection() {
   )
 }
 
-{/* Custom Styles for Modal */}
+{/* Custom Styles for Modal and Performance Optimizations */}
 <style jsx global>{`
   /* Custom scrollbar for modal content */
   .modal-scrollbar {
@@ -992,10 +1110,12 @@ export function SelectedWorkSection() {
     background-color: #718096;
   }
 
-  /* Prose styles for better typography */
+  /* Optimized prose styles for better typography and performance */
   .prose {
     color: #374151;
     max-width: none;
+    /* Use will-change for better performance during scrolling */
+    will-change: scroll-position;
   }
 
   .prose h3 {
@@ -1051,14 +1171,55 @@ export function SelectedWorkSection() {
     color: #f9fafb;
   }
 
-  /* Image hover effects */
+  /* Optimized image hover effects with GPU acceleration */
   .gallery-image {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Use transform3d for GPU acceleration */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
   }
 
   .gallery-image:hover {
-    transform: scale(1.05);
+    transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Performance optimization for animations */
+  .card-hover {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .gallery-image,
+    .card-hover,
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Loading animation optimization */
+  @keyframes skeleton-loading {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+
+  .skeleton-loader {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.5s infinite;
+  }
+
+  .dark .skeleton-loader {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200px 100%;
   }
 `}</style>
 

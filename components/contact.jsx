@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { Button } from "../components/ui/button"
-import { Badge } from "../components/ui/badge"
+import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function ContactSection() {
