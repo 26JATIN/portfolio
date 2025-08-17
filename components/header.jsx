@@ -30,7 +30,7 @@ export function Header() {
 				<div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-sm">
 					C
 				</div>
-				<span className="text-lg font-semibold">COZYDIADORA</span>
+				<span className="text-lg font-semibold">Jatin Gupta</span>
 			</div>
 
 			<div className="flex items-center gap-4">

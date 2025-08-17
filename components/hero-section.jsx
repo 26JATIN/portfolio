@@ -61,7 +61,7 @@ export function HeroSection() {
                 {/* Left side of card */}
                 <div className="flex-1 p-6 lg:p-8">
                   <div className="flex items-center gap-3 mb-3">
-                    <h3 className="font-bold text-xl lg:text-2xl">Cozydiadora</h3>
+                    <h3 className="font-bold text-xl lg:text-2xl">Jatin Gupta</h3>
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                   </div>
                   <p className="text-muted-foreground text-sm mb-6 flex items-center gap-2">
@@ -102,7 +102,7 @@ export function HeroSection() {
                 <div className="w-full sm:w-32 md:w-36 lg:w-44 xl:w-52 h-48 sm:h-auto relative overflow-hidden">
                   <img 
                     src="/smiling-designer-headshot.png" 
-                    alt="Cozydiadora" 
+                    alt="Jatin Gupta" 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>

@@ -5,7 +5,7 @@ import SmoothScrollProvider from "../components/smooth-scroll-provider"
 import "./globals.css"
 
 export const metadata = {
-  title: "Cozydiadora - Product Designer",
+  title: "Jatin Gupta - Product Designer",
   description: "Product Designer with 11 years of experience working on useful and mindful products",
   generator: "v0.app",
 }

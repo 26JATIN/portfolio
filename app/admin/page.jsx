@@ -9,11 +9,32 @@ export default function AdminLogin() {
   const [success, setSuccess] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const [darkMode, setDarkMode] = useState(true) // Default to dark mode
   const router = useRouter()
 
   useEffect(() => {
     setIsVisible(true)
+    // Set default to dark theme for admin login
+    const savedTheme = localStorage.getItem('adminTheme') || 'dark'
+    if (savedTheme === 'dark') {
+      setDarkMode(true)
+      document.documentElement.classList.add('dark')
+    } else {
+      setDarkMode(false)
+      document.documentElement.classList.remove('dark')
+    }
   }, [])
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+    if (!darkMode) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('adminTheme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('adminTheme', 'light')
+    }
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -56,20 +77,47 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-black to-gray-800' 
+        : 'bg-gradient-to-br from-gray-50 via-white to-blue-50'
+    }`}>
+      {/* Theme Toggle Button */}
+      <button
+        onClick={toggleDarkMode}
+        className={`absolute top-6 right-6 z-20 p-3 rounded-full transition-all duration-300 ${
+          darkMode 
+            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white' 
+            : 'bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900'
+        } shadow-lg border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
+        title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
+        <span className="text-lg">
+          {darkMode ? '☀️' : '🌙'}
+        </span>
+      </button>
+
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.1, scale: 1 }}
+          animate={{ opacity: darkMode ? 0.1 : 0.1, scale: 1 }}
           transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full blur-3xl"
+          className={`absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl ${
+            darkMode 
+              ? 'bg-gradient-to-br from-indigo-600 to-purple-700' 
+              : 'bg-gradient-to-br from-blue-400 to-purple-500'
+          }`}
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.1, scale: 1 }}
+          animate={{ opacity: darkMode ? 0.1 : 0.1, scale: 1 }}
           transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
-          className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-br from-indigo-400 to-cyan-500 rounded-full blur-3xl"
+          className={`absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-3xl ${
+            darkMode 
+              ? 'bg-gradient-to-br from-purple-600 to-cyan-700' 
+              : 'bg-gradient-to-br from-indigo-400 to-cyan-500'
+          }`}
         />
       </div>
 
@@ -91,8 +139,12 @@ export default function AdminLogin() {
               <span className="text-indigo-600 font-bold text-lg">A</span>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your admin dashboard</p>
+          <h1 className={`text-3xl font-bold mb-2 ${
+            darkMode ? 'text-white' : 'text-gray-900'
+          }`}>Welcome Back</h1>
+          <p className={`${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>Sign in to your admin dashboard</p>
         </motion.div>
 
         {/* Login Form */}
@@ -100,18 +152,28 @@ export default function AdminLogin() {
           initial={{ opacity: 0, y: 20 }}
           animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-white/80 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/20"
+          className={`backdrop-blur-lg rounded-3xl p-8 shadow-xl border transition-colors duration-300 ${
+            darkMode 
+              ? 'bg-gray-900/80 border-gray-700' 
+              : 'bg-white/80 border-white/20'
+          }`}
         >
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Email Address
                 </label>
                 <input
                   type="email"
                   required
-                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 placeholder-gray-400"
+                  className={`w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 ${
+                    darkMode 
+                      ? 'bg-gray-800/50 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-gray-50/50 border-gray-200 text-gray-900 placeholder-gray-400'
+                  }`}
                   placeholder="Enter your email"
                   value={credentials.email}
                   onChange={(e) => setCredentials({...credentials, email: e.target.value})}
@@ -119,13 +181,19 @@ export default function AdminLogin() {
               </div>
               
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className={`block text-sm font-medium mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Password
                 </label>
                 <input
                   type="password"
                   required
-                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 placeholder-gray-400"
+                  className={`w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 ${
+                    darkMode 
+                      ? 'bg-gray-800/50 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-gray-50/50 border-gray-200 text-gray-900 placeholder-gray-400'
+                  }`}
                   placeholder="Enter your password"
                   value={credentials.password}
                   onChange={(e) => setCredentials({...credentials, password: e.target.value})}
@@ -137,7 +205,11 @@ export default function AdminLogin() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm"
+                className={`px-4 py-3 rounded-xl text-sm border ${
+                  darkMode 
+                    ? 'bg-red-900/20 border-red-800 text-red-400' 
+                    : 'bg-red-50 border-red-200 text-red-600'
+                }`}
               >
                 {error}
               </motion.div>
@@ -147,7 +219,11 @@ export default function AdminLogin() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm"
+                className={`px-4 py-3 rounded-xl text-sm border ${
+                  darkMode 
+                    ? 'bg-green-900/20 border-green-800 text-green-400' 
+                    : 'bg-green-50 border-green-200 text-green-600'
+                }`}
               >
                 {success}
               </motion.div>
@@ -171,19 +247,6 @@ export default function AdminLogin() {
             </motion.button>
           </form>
 
-          {/* Demo Credentials */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100"
-          >
-            <p className="text-sm text-blue-700 font-medium mb-2">Demo Credentials:</p>
-            <div className="text-sm text-blue-600 space-y-1">
-              <p>Email: admin@test.com</p>
-              <p>Password: admin123</p>
-            </div>
-          </motion.div>
         </motion.div>
 
         {/* Footer */}
@@ -191,7 +254,9 @@ export default function AdminLogin() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="text-center mt-8 text-sm text-gray-500"
+          className={`text-center mt-8 text-sm ${
+            darkMode ? 'text-gray-500' : 'text-gray-500'
+          }`}
         >
           Protected by advanced security measures
         </motion.div>

@@ -66,7 +66,7 @@ export function ContactSection() {
           <div className="w-6 sm:w-8 h-6 sm:h-8 bg-foreground rounded-full flex items-center justify-center text-background font-bold text-sm sm:text-base">
             C
           </div>
-          <span className="text-muted-foreground font-medium text-sm sm:text-base">COZYDIADORA</span>
+          <span className="text-muted-foreground font-medium text-sm sm:text-base">Jatin Gupta</span>
         </div>
         <span className="text-muted-foreground text-sm sm:text-base">©2024</span>
         <button className="bg-muted text-muted-foreground px-4 sm:px-6 py-2 sm:py-3 rounded-full font-medium hover:opacity-80 transition-opacity text-sm sm:text-base">
