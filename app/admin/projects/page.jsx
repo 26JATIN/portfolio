@@ -16,7 +16,7 @@ export default function AdminProjects() {
     year: new Date().getFullYear().toString(),
     category: '',
     tags: [],
-    gradient: 'from-blue-100 to-blue-200',
+    gradient: '',
     liveUrl: '',
     techStack: [],
     heroImage: '',
@@ -41,6 +41,7 @@ export default function AdminProjects() {
   const [newResultMetric, setNewResultMetric] = useState('')
 
   const gradientOptions = [
+    { value: '', label: 'None', preview: 'bg-gray-100 dark:bg-gray-800' },
     { value: 'from-blue-100 to-blue-200', label: 'Blue', preview: 'bg-gradient-to-br from-blue-100 to-blue-200' },
     { value: 'from-green-100 to-green-200', label: 'Green', preview: 'bg-gradient-to-br from-green-100 to-green-200' },
     { value: 'from-purple-100 to-purple-200', label: 'Purple', preview: 'bg-gradient-to-br from-purple-100 to-purple-200' },
@@ -78,7 +79,7 @@ export default function AdminProjects() {
       year: new Date().getFullYear().toString(),
       category: '',
       tags: [],
-      gradient: 'from-blue-100 to-blue-200',
+      gradient: '',
       liveUrl: '',
       techStack: [],
       heroImage: '',
@@ -645,9 +646,15 @@ export default function AdminProjects() {
                             formData.gradient === option.value 
                               ? 'border-blue-500' 
                               : 'border-gray-300 dark:border-gray-700'
-                          }`}
+                          } flex items-center justify-center relative overflow-hidden`}
                           title={option.label}
-                        />
+                        >
+                          {option.value === '' && (
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                              None
+                            </span>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </div>

@@ -140,21 +140,19 @@ export const Card = ({
               >
                 <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
                   {/* Hero Image/Preview */}
-                  <div className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-4 sm:p-6`}>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl aspect-video p-4 sm:p-6 shadow-lg flex items-center justify-center">
-                      {card.heroImage ? (
-                        <img 
-                          src={card.heroImage} 
-                          alt={card.title}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <div className="text-center text-gray-500 dark:text-gray-400">
-                          <div className="text-lg sm:text-xl font-medium">{card.title}</div>
-                          <div className="text-sm mt-2">Hero image would go here</div>
-                        </div>
-                      )}
-                    </div>
+                  <div className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} rounded-2xl aspect-video p-4 sm:p-6 border-0 flex items-center justify-center`}>
+                    {card.heroImage ? (
+                      <img 
+                        src={card.heroImage} 
+                        alt={card.title}
+                        className="w-full h-full object-cover rounded-lg border-0 outline-none"
+                      />
+                    ) : (
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        <div className="text-lg sm:text-xl font-medium">{card.title}</div>
+                        <div className="text-sm mt-2">Hero image would go here</div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Project Details */}
@@ -241,7 +239,7 @@ export const Card = ({
         className="cursor-pointer"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}>
         <div 
-          className={`bg-gradient-to-br ${card.gradient} p-4 sm:p-6 aspect-[4/3] overflow-hidden`}
+          className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} p-4 sm:p-6 aspect-[4/3] overflow-hidden`}
           style={{
             borderRadius: '24px 24px 4px 24px'
           }}
