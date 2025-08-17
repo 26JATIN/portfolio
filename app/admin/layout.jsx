@@ -109,7 +109,7 @@ export default function AdminLayout({ children }) {
   const menuItems = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: '📊', gradient: 'from-blue-500 to-cyan-500' },
     { name: 'Projects', href: '/admin/projects', icon: '💼', gradient: 'from-purple-500 to-pink-500' },
-    { name: 'Blog Posts', href: '/admin/blog', icon: '📝', gradient: 'from-green-500 to-emerald-500' },
+    { name: 'Experience', href: '/admin/experience', icon: '📝', gradient: 'from-green-500 to-emerald-500' },
     { name: 'Messages', href: '/admin/messages', icon: '✉️', gradient: 'from-orange-500 to-red-500' },
     { name: 'Analytics', href: '/admin/analytics', icon: '📈', gradient: 'from-indigo-500 to-purple-500' },
     { name: 'Settings', href: '/admin/settings', icon: '⚙️', gradient: 'from-gray-500 to-slate-500' },
