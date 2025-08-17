@@ -277,6 +277,8 @@ export const Card = ({
 
 export function SelectedWorkSection() {
   const [isVisible, setIsVisible] = useState(false)
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
   const sectionRef = useRef(null)
 
   useEffect(() => {
@@ -296,7 +298,49 @@ export function SelectedWorkSection() {
     return () => observer.disconnect()
   }, [])
 
-  const projects = [
+  // Fetch published projects
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects?published=true')
+        const data = await response.json()
+        
+        if (data.success) {
+          // Transform the projects to match the existing Card component structure
+          const transformedProjects = data.projects.map(project => ({
+            ...project,
+            id: project._id,
+            // Create a default preview component if not provided
+            preview: project.preview || (
+              <div className="space-y-3">
+                <h4 className="text-lg font-bold leading-tight">{project.title}</h4>
+                <p className="text-sm text-gray-600 line-clamp-3">{project.description}</p>
+                <div className="flex gap-2 mt-4">
+                  <button className="bg-black text-white text-sm px-4 py-2 rounded">View Project</button>
+                  <button className="border text-sm px-4 py-2 rounded">Learn More</button>
+                </div>
+              </div>
+            ),
+            // Transform content to JSX if it's a string
+            content: project.content ? (
+              <div className="prose prose-gray max-w-none dark:prose-invert">
+                <div dangerouslySetInnerHTML={{ __html: project.content.replace(/\n/g, '<br />') }} />
+              </div>
+            ) : null
+          }))
+          setProjects(transformedProjects)
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
+  const defaultProjects = [
     {
       id: 1,
       title: "ZENPOINT WELLNESS",
@@ -723,6 +767,9 @@ export function SelectedWorkSection() {
     },
   ]
 
+  // Fallback projects for when API is not available or loading
+  const displayProjects = projects.length > 0 ? projects : defaultProjects
+
   return (
     <section ref={sectionRef} className="bg-background">
       <div className="flex flex-col lg:flex-row">
@@ -756,31 +803,49 @@ export function SelectedWorkSection() {
 
         <div className="w-full lg:w-4/5 overflow-y-auto">
           <div className="p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 sm:space-y-12">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
-            >
-              {projects.map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  transition={{ 
-                    duration: 0.6, 
-                    delay: 0.9 + (index * 0.1),
-                    ease: "easeOut" 
-                  }}
-                >
-                  <Card
+            {loading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="animate-pulse">
+                    <div className="bg-gray-200 dark:bg-gray-700 rounded-3xl aspect-[4/3] mb-4"></div>
+                    <div className="space-y-2">
+                      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                      <div className="flex gap-2">
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+                transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
+              >
+                {displayProjects.map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ 
+                      duration: 0.6, 
+                      delay: 0.9 + (index * 0.1),
+                      ease: "easeOut" 
+                    }}
+                  >
+                    <Card
                     card={project}
                     index={index}
                     layout={true}
                   />
                 </motion.div>
               ))}
-            </motion.div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
