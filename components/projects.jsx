@@ -8,8 +8,8 @@ import React, {
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/use-outside-click";
-import { Button } from "../components/ui/button"
-import { Badge } from "../components/ui/badge"
+import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
 import Lenis from '@studio-freight/lenis'
 
 export const Card = ({
