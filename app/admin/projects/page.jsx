@@ -22,13 +22,31 @@ export default function AdminProjects() {
     techStack: [],
     heroImage: '',
     gallery: [],
-    content: '',
+    
+    // Structured content fields
+    projectOverview: '',
+    challenge: '',
+    designProcess: '',
+    keyFeatures: [],
+    technicalImplementation: '',
+    results: '',
+    resultMetrics: [],
+    
+    // Preview customization
+    previewTitle: '',
+    previewSubtitle: '',
+    previewColor: '#3B82F6',
+    previewButtonText: 'View Project',
+    previewSecondButtonText: 'Learn More',
+    
     isPublished: false
   })
   const [uploading, setUploading] = useState(false)
   const [newTag, setNewTag] = useState('')
   const [newTech, setNewTech] = useState('')
   const [newGalleryItem, setNewGalleryItem] = useState({ src: '', alt: '', caption: '' })
+  const [newKeyFeature, setNewKeyFeature] = useState({ title: '', description: '' })
+  const [newResultMetric, setNewResultMetric] = useState('')
 
   const gradientOptions = [
     { value: 'from-blue-100 to-blue-200', label: 'Blue', preview: 'bg-gradient-to-br from-blue-100 to-blue-200' },
@@ -72,13 +90,31 @@ export default function AdminProjects() {
       techStack: [],
       heroImage: '',
       gallery: [],
-      content: '',
+      
+      // Structured content fields
+      projectOverview: '',
+      challenge: '',
+      designProcess: '',
+      keyFeatures: [],
+      technicalImplementation: '',
+      results: '',
+      resultMetrics: [],
+      
+      // Preview customization
+      previewTitle: '',
+      previewSubtitle: '',
+      previewColor: '#3B82F6',
+      previewButtonText: 'View Project',
+      previewSecondButtonText: 'Learn More',
+      
       isPublished: false
     })
     setEditingProject(null)
     setNewTag('')
     setNewTech('')
     setNewGalleryItem({ src: '', alt: '', caption: '' })
+    setNewKeyFeature({ title: '', description: '' })
+    setNewResultMetric('')
   }
 
   // Open modal for new project
@@ -101,7 +137,23 @@ export default function AdminProjects() {
       techStack: project.techStack || [],
       heroImage: project.heroImage || '',
       gallery: project.gallery || [],
-      content: project.content || '',
+      
+      // Structured content fields
+      projectOverview: project.projectOverview || '',
+      challenge: project.challenge || '',
+      designProcess: project.designProcess || '',
+      keyFeatures: project.keyFeatures || [],
+      technicalImplementation: project.technicalImplementation || '',
+      results: project.results || '',
+      resultMetrics: project.resultMetrics || [],
+      
+      // Preview customization
+      previewTitle: project.previewTitle || project.title || '',
+      previewSubtitle: project.previewSubtitle || project.description || '',
+      previewColor: project.previewColor || '#3B82F6',
+      previewButtonText: project.previewButtonText || 'View Project',
+      previewSecondButtonText: project.previewSecondButtonText || 'Learn More',
+      
       isPublished: project.isPublished || false
     })
     setEditingProject(project)
@@ -221,6 +273,44 @@ export default function AdminProjects() {
     setFormData(prev => ({
       ...prev,
       gallery: prev.gallery.filter((_, i) => i !== index)
+    }))
+  }
+
+  // Add key feature
+  const addKeyFeature = () => {
+    if (newKeyFeature.title.trim() && newKeyFeature.description.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        keyFeatures: [...prev.keyFeatures, { ...newKeyFeature }]
+      }))
+      setNewKeyFeature({ title: '', description: '' })
+    }
+  }
+
+  // Remove key feature
+  const removeKeyFeature = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      keyFeatures: prev.keyFeatures.filter((_, i) => i !== index)
+    }))
+  }
+
+  // Add result metric
+  const addResultMetric = () => {
+    if (newResultMetric.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        resultMetrics: [...prev.resultMetrics, newResultMetric.trim()]
+      }))
+      setNewResultMetric('')
+    }
+  }
+
+  // Remove result metric
+  const removeResultMetric = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      resultMetrics: prev.resultMetrics.filter((_, i) => i !== index)
     }))
   }
 
@@ -759,18 +849,229 @@ export default function AdminProjects() {
                   </div>
                 </div>
 
-                {/* Content */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Project Content (Detailed Description)
-                  </label>
-                  <textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    rows={8}
-                    placeholder="Detailed project description, challenges, solutions, etc."
-                  />
+                {/* Preview Card Customization */}
+                <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Preview Card Customization</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Preview Title
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.previewTitle}
+                        onChange={(e) => setFormData(prev => ({ ...prev, previewTitle: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        placeholder="Title for preview card"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Preview Color
+                      </label>
+                      <input
+                        type="color"
+                        value={formData.previewColor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, previewColor: e.target.value }))}
+                        className="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Preview Subtitle
+                    </label>
+                    <textarea
+                      value={formData.previewSubtitle}
+                      onChange={(e) => setFormData(prev => ({ ...prev, previewSubtitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={2}
+                      placeholder="Subtitle for preview card"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        First Button Text
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.previewButtonText}
+                        onChange={(e) => setFormData(prev => ({ ...prev, previewButtonText: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        placeholder="First button text"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Second Button Text
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.previewSecondButtonText}
+                        onChange={(e) => setFormData(prev => ({ ...prev, previewSecondButtonText: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        placeholder="Second button text"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Structured Content */}
+                <div className="space-y-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Project Details</h3>
+                  
+                  {/* Project Overview */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Project Overview
+                    </label>
+                    <textarea
+                      value={formData.projectOverview}
+                      onChange={(e) => setFormData(prev => ({ ...prev, projectOverview: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={4}
+                      placeholder="Comprehensive overview of the project..."
+                    />
+                  </div>
+
+                  {/* Challenge */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      The Challenge
+                    </label>
+                    <textarea
+                      value={formData.challenge}
+                      onChange={(e) => setFormData(prev => ({ ...prev, challenge: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={3}
+                      placeholder="What challenges did this project address..."
+                    />
+                  </div>
+
+                  {/* Design Process */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Design Process
+                    </label>
+                    <textarea
+                      value={formData.designProcess}
+                      onChange={(e) => setFormData(prev => ({ ...prev, designProcess: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={4}
+                      placeholder="Describe the design and development process..."
+                    />
+                  </div>
+
+                  {/* Key Features */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Key Features
+                    </label>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={newKeyFeature.title}
+                          onChange={(e) => setNewKeyFeature(prev => ({ ...prev, title: e.target.value }))}
+                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          placeholder="Feature title"
+                        />
+                        <input
+                          type="text"
+                          value={newKeyFeature.description}
+                          onChange={(e) => setNewKeyFeature(prev => ({ ...prev, description: e.target.value }))}
+                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          placeholder="Feature description"
+                        />
+                      </div>
+                      <Button type="button" onClick={addKeyFeature} className="w-full">
+                        Add Key Feature
+                      </Button>
+                      <div className="space-y-2">
+                        {formData.keyFeatures.map((feature, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">{feature.title}</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-300">{feature.description}</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeKeyFeature(index)}
+                              className="p-1 text-red-500 hover:text-red-700"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Technical Implementation */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Technical Implementation
+                    </label>
+                    <textarea
+                      value={formData.technicalImplementation}
+                      onChange={(e) => setFormData(prev => ({ ...prev, technicalImplementation: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={3}
+                      placeholder="Technical details and implementation approach..."
+                    />
+                  </div>
+
+                  {/* Results */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Results & Impact
+                    </label>
+                    <textarea
+                      value={formData.results}
+                      onChange={(e) => setFormData(prev => ({ ...prev, results: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={3}
+                      placeholder="Project outcomes and impact..."
+                    />
+                  </div>
+
+                  {/* Result Metrics */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Result Metrics
+                    </label>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newResultMetric}
+                          onChange={(e) => setNewResultMetric(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addResultMetric())}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          placeholder="Add a result metric"
+                        />
+                        <Button type="button" onClick={addResultMetric}>Add</Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.resultMetrics.map((metric, index) => (
+                          <Badge key={index} variant="outline" className="flex items-center gap-1">
+                            {metric}
+                            <button
+                              type="button"
+                              onClick={() => removeResultMetric(index)}
+                              className="ml-1 hover:text-red-500"
+                            >
+                              <X size={12} />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Publish Status */}

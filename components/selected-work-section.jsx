@@ -138,10 +138,10 @@ export const Card = ({
                 className="flex-1 overflow-hidden modal-scrollbar"
                 style={{ height: 'calc(100% - 120px)' }}
               >
-                <div className="p-6 space-y-8">
+                <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
                   {/* Hero Image/Preview */}
-                  <div className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-6`}>
-                    <div className="bg-white rounded-xl aspect-video p-6 shadow-lg flex items-center justify-center">
+                  <div className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-4 sm:p-6`}>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl aspect-video p-4 sm:p-6 shadow-lg flex items-center justify-center">
                       {card.heroImage ? (
                         <img 
                           src={card.heroImage} 
@@ -149,8 +149,8 @@ export const Card = ({
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
-                        <div className="text-center text-gray-500">
-                          <div className="text-lg font-medium">{card.title}</div>
+                        <div className="text-center text-gray-500 dark:text-gray-400">
+                          <div className="text-lg sm:text-xl font-medium">{card.title}</div>
                           <div className="text-sm mt-2">Hero image would go here</div>
                         </div>
                       )}
@@ -158,30 +158,34 @@ export const Card = ({
                   </div>
 
                   {/* Project Details */}
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {card.tags.map((tag, tagIndex) => (
-                      <Badge key={tagIndex} variant="secondary" className="text-sm px-3 py-1">
+                      <Badge key={tagIndex} variant="secondary" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
                         {tag}
                       </Badge>
                     ))}
                   </div>
 
-                  {/* Main Content */}
-                  <div className="prose prose-gray max-w-none dark:prose-invert">
+                  {/* Main Content with improved typography */}
+                  <div className="prose prose-sm sm:prose-base lg:prose-lg prose-gray max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-white prose-li:text-gray-600 dark:prose-li:text-gray-300"
+                       style={{
+                         fontSize: 'clamp(14px, 2.5vw, 16px)',
+                         lineHeight: '1.7'
+                       }}>
                     {card.content}
                   </div>
 
                   {/* Project Gallery */}
                   {card.gallery && card.gallery.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-xl font-semibold">Project Gallery</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4 sm:space-y-6">
+                      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         {card.gallery.map((image, imgIndex) => (
-                          <div key={imgIndex} className="rounded-lg overflow-hidden bg-gray-100">
+                          <div key={imgIndex} className="rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
                             <img 
                               src={image.src} 
                               alt={image.alt || `${card.title} - Image ${imgIndex + 1}`}
-                              className="w-full h-64 object-cover gallery-image cursor-pointer"
+                              className="w-full h-48 sm:h-56 lg:h-64 object-cover gallery-image cursor-pointer transition-transform duration-300 hover:scale-105"
                             />
                             {image.caption && (
                               <div className="p-3 text-sm text-gray-600 dark:text-gray-300">
@@ -195,14 +199,14 @@ export const Card = ({
                   )}
 
                   {/* Technical Details */}
-                  {card.techStack && (
+                  {card.techStack && card.techStack.length > 0 && (
                     <div className="space-y-4">
-                      <h4 className="text-xl font-semibold">Technology Stack</h4>
+                      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Technology Stack</h4>
                       <div className="flex flex-wrap gap-2">
                         {card.techStack.map((tech, techIndex) => (
                           <span 
                             key={techIndex}
-                            className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm"
+                            className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
                           >
                             {tech}
                           </span>
@@ -212,17 +216,17 @@ export const Card = ({
                   )}
 
                   {/* Action Buttons */}
-                  <div className="flex gap-4 pt-4">
-                    <Button className="rounded-full">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Button className="rounded-full flex-1 sm:flex-none" size="lg">
                       {card.liveUrl ? 'View Live Site' : 'View Project'}
                     </Button>
-                    <Button variant="outline" className="rounded-full">
+                    <Button variant="outline" className="rounded-full flex-1 sm:flex-none" size="lg">
                       Case Study
                     </Button>
                   </div>
 
                   {/* Extra spacing for better scroll experience */}
-                  <div className="h-20"></div>
+                  <div className="h-8 sm:h-12"></div>
                 </div>
               </div>
             </motion.div>
@@ -237,32 +241,32 @@ export const Card = ({
         className="cursor-pointer"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}>
         <div 
-          className={`bg-gradient-to-br ${card.gradient} p-6 aspect-[4/3] overflow-hidden`}
+          className={`bg-gradient-to-br ${card.gradient} p-4 sm:p-6 aspect-[4/3] overflow-hidden`}
           style={{
             borderRadius: '24px 24px 4px 24px'
           }}
         >
-          <div className="bg-white h-full p-4 shadow-lg relative" style={{ borderRadius: '16px 16px 2px 16px' }}>
+          <div className="bg-white dark:bg-gray-800 h-full p-3 sm:p-4 shadow-lg relative" style={{ borderRadius: '16px 16px 2px 16px' }}>
             {card.preview}
           </div>
         </div>
-        <div className="space-y-4 mt-4">
+        <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
           <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start gap-2">
               <motion.h3 
                 layoutId={layout ? `title-${card.title}` : undefined}
-                className="text-xl font-semibold text-foreground leading-tight"
+                className="text-lg sm:text-xl font-semibold text-foreground leading-tight flex-1"
               >
                 {card.title}
               </motion.h3>
-              <span className="text-muted-foreground text-lg">{card.year}</span>
+              <span className="text-muted-foreground text-sm sm:text-base font-medium flex-shrink-0">{card.year}</span>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {card.tags.map((tag, tagIndex) => (
               <Badge
                 key={tagIndex}
-                className="text-sm px-3 py-1"
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1"
                 variant={tagIndex === 0 ? "default" : "outline"}
               >
                 {tag}
@@ -310,23 +314,110 @@ export function SelectedWorkSection() {
           const transformedProjects = data.projects.map(project => ({
             ...project,
             id: project._id,
-            // Create a default preview component if not provided
-            preview: project.preview || (
+            // Create a preview component from project data
+            preview: (
               <div className="space-y-3">
-                <h4 className="text-lg font-bold leading-tight">{project.title}</h4>
-                <p className="text-sm text-gray-600 line-clamp-3">{project.description}</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <div 
+                    className="w-6 h-6 rounded" 
+                    style={{ backgroundColor: project.previewColor || '#3B82F6' }}
+                  ></div>
+                  <span className="text-sm font-medium">{project.title}</span>
+                </div>
+                <h4 className="text-lg font-bold leading-tight">
+                  {project.previewTitle || project.title}
+                </h4>
+                <p className="text-sm text-gray-600 line-clamp-3">
+                  {project.previewSubtitle || project.description}
+                </p>
                 <div className="flex gap-2 mt-4">
-                  <button className="bg-black text-white text-sm px-4 py-2 rounded">View Project</button>
-                  <button className="border text-sm px-4 py-2 rounded">Learn More</button>
+                  <button 
+                    className="text-white text-sm px-4 py-2 rounded"
+                    style={{ backgroundColor: project.previewColor || '#3B82F6' }}
+                  >
+                    {project.previewButtonText || 'View Project'}
+                  </button>
+                  <button className="border text-sm px-4 py-2 rounded">
+                    {project.previewSecondButtonText || 'Learn More'}
+                  </button>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <div 
+                    className="w-16 h-16 rounded-full opacity-20"
+                    style={{ backgroundColor: project.previewColor || '#3B82F6' }}
+                  ></div>
                 </div>
               </div>
             ),
-            // Transform content to JSX if it's a string
-            content: project.content ? (
-              <div className="prose prose-gray max-w-none dark:prose-invert">
-                <div dangerouslySetInnerHTML={{ __html: project.content.replace(/\n/g, '<br />') }} />
+            // Create structured content JSX
+            content: (
+              <div className="space-y-8">
+                {project.projectOverview && (
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Project Overview</h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+                      {project.projectOverview}
+                    </p>
+                  </div>
+                )}
+                
+                {project.challenge && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900 dark:text-white">The Challenge</h4>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {project.challenge}
+                    </p>
+                  </div>
+                )}
+
+                {project.designProcess && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900 dark:text-white">Design Process</h4>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {project.designProcess}
+                    </p>
+                  </div>
+                )}
+
+                {project.keyFeatures && project.keyFeatures.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900 dark:text-white">Key Features</h4>
+                    <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-3 text-base">
+                      {project.keyFeatures.map((feature, index) => (
+                        <li key={index}>
+                          <strong className="text-gray-900 dark:text-white">{feature.title}:</strong> {feature.description}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {project.technicalImplementation && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900 dark:text-white">Technical Implementation</h4>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {project.technicalImplementation}
+                    </p>
+                  </div>
+                )}
+
+                {project.results && (
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-gray-900 dark:text-white">Results & Impact</h4>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+                      {project.results}
+                    </p>
+                    {project.resultMetrics && project.resultMetrics.length > 0 && (
+                      <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2 ml-4">
+                        {project.resultMetrics.map((metric, index) => (
+                          <li key={index}>{metric}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
-            ) : null
+            )
           }))
           setProjects(transformedProjects)
         }
