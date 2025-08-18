@@ -5,6 +5,7 @@ import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { AnimatedTooltip } from "./ui/animated-tooltip"
 import { LinkPreview } from "./ui/link-preview"
+import { WobbleCard } from "./ui/wobble-card"
 export function ContactSection() {
 
   const socialPlatforms = [
@@ -88,21 +89,24 @@ export function ContactSection() {
 
 
         {/* Call to Action Section */}
-        <div className="bg-gradient-to-br from-foreground to-foreground/90 rounded-3xl p-8 lg:p-12 text-background text-center mb-16">
+        <WobbleCard
+          containerClassName="mb-16"
+          className="text-center text-white"
+        >
           <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Connect?</h3>
-          <p className="text-lg text-background/80 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
             Whether you're looking to collaborate on a project, discuss opportunities, 
             or just want to say hello, I'd love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              className="bg-background text-foreground hover:bg-background/90 rounded-full px-8 py-3 font-semibold transition-all duration-300 hover:scale-105"
+              className="bg-white text-indigo-800 hover:bg-white/90 rounded-full px-8 py-3 font-semibold transition-all duration-300 hover:scale-105"
               onClick={() => window.location.href = 'mailto:hello@jatingupta.dev'}
             >
               Send me an email
             </Button>
           </div>
-        </div>
+        </WobbleCard>
 
         {/* Footer */}
         <footer className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-border/50 space-y-4 sm:space-y-0">
