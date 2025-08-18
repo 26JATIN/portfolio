@@ -36,7 +36,7 @@ export function Header() {
 			<div className="flex items-center gap-2 sm:gap-4">
 				<ThemeToggle />
 				<Button className="rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm bg-foreground text-background hover:bg-foreground/90">
-					Book a call
+					Portfolio
 				</Button>
 			</div>
 		</header>
