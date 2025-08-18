@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { WobbleCard } from "./ui/wobble-card"
 
 export function ServicesSection() {
   const [isVisible, setIsVisible] = useState(false)
@@ -122,12 +123,7 @@ export function ServicesSection() {
   ]
 
   const brands = [
-    { name: "Jeep", logo: "Jeep" },
-    { name: "Amazon", logo: "amazon" },
-    { name: "Bitcoin", logo: "₿bitcoin" },
-    { name: "HubSpot", logo: "HubSpot" },
-    { name: "Stripe", logo: "stripe" },
-    { name: "Google", logo: "Google" },
+
   ]
 
   return (
@@ -137,12 +133,13 @@ export function ServicesSection() {
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       }`}
     >
-      <div
-        ref={missionRef}
-        className={`bg-teal-500 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 mb-8 sm:mb-16 backdrop-blur-sm bg-opacity-95 shadow-2xl border border-white/10 transition-all duration-1000 ease-out ${
-          missionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-        }`}
-      >
+      <div ref={missionRef}>
+        <WobbleCard
+          containerClassName={`bg-teal-700 h-40 sm:h-70 md:h-70 mb-8 sm:mb-16 transition-all duration-1000 ease-out ${
+            missionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+          }`}
+          className="flex flex-col justify-center"
+        >
         <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8 leading-tight">
           My mission is to assist startups and enterprises in creating an emotional bond between their products and
           satisfied, engaged customers.
@@ -161,9 +158,8 @@ export function ServicesSection() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div ref={servicesRef} className="flex flex-col lg:flex-row min-h-[60vh]">
+        </WobbleCard>
+      </div>      <div ref={servicesRef} className="flex flex-col lg:flex-row min-h-[60vh]">
         {/* Left sidebar with title */}
         <div className="w-full lg:w-1/4 flex-shrink-0 mb-8 lg:mb-0 lg:pr-8">
           <h3

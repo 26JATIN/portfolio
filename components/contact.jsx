@@ -3,44 +3,46 @@
 import React from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-
+import { AnimatedTooltip } from "./ui/animated-tooltip"
+import { LinkPreview } from "./ui/link-preview"
 export function ContactSection() {
 
   const socialPlatforms = [
     { 
-      name: "LinkedIn", 
-      emoji: "💼",
-      url: "#",
-      color: "bg-blue-600 hover:bg-blue-700",
-      description: "Professional Network"
-    },
-    { 
-      name: "Dribbble", 
-      emoji: "🎨",
-      url: "#",
-      color: "bg-pink-500 hover:bg-pink-600",
-      description: "Design Portfolio"
-    },
-    { 
-      name: "Behance", 
-      emoji: "🎯",
-      url: "#",
-      color: "bg-blue-500 hover:bg-blue-600",
-      description: "Creative Showcase"
-    },
-    { 
+      id: 1,
       name: "Instagram", 
-      emoji: "📸",
-      url: "#",
-      color: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600",
-      description: "Behind the Scenes"
+      designation: "Behind the Scenes",
+      image: "/icons/instagram.png",
+      url: "https://www.instagram.com/jatingupta_26"
     },
     { 
-      name: "Twitter", 
-      emoji: "🐦",
-      url: "#",
-      color: "bg-gray-800 hover:bg-gray-900",
-      description: "Thoughts & Updates"
+      id: 2,
+      name: "LinkedIn", 
+      designation: "Professional Network",
+      image: "/icons/linkedin.png",
+      url: "https://www.linkedin.com/in/26jatin"
+    },
+    { 
+      id: 3,
+      name: "Discord", 
+      designation: "Design Portfolio",
+      image: "/icons/discord.png",
+      url: "https://discord.com/users/775586851960389682"
+    },
+    { 
+      id: 4,
+      name: "slack", 
+      designation: "Creative Showcase",
+      image: "/icons/slack.png",
+      url: "#"
+    },
+
+    { 
+      id: 5,
+      name: "X", 
+      designation: "Thoughts & Updates",
+      image: "/icons/x.png",
+      url: "#"
     }
   ]
 
@@ -84,36 +86,6 @@ export function ContactSection() {
           </div>
         </div>
 
-        {/* Social Media Section */}
-        <div className="mb-16">
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
-            {socialPlatforms.map((platform, index) => (
-              <a
-                key={platform.name}
-                href={platform.url}
-                target={platform.name === "Resume" ? "_blank" : "_self"}
-                rel={platform.name === "Resume" ? "noopener noreferrer" : ""}
-                className={`group ${platform.color} rounded-2xl p-6 text-white hover:scale-105 transform transition-all duration-300 shadow-lg hover:shadow-xl block`}
-              >
-                <div className="text-center space-y-3">
-                  <div className="text-3xl group-hover:scale-110 transition-transform duration-300">
-                    {platform.emoji}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg">{platform.name}</h4>
-                    <p className="text-sm text-white/80">{platform.description}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto group-hover:bg-white/30 transition-colors duration-300">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
 
         {/* Call to Action Section */}
         <div className="bg-gradient-to-br from-foreground to-foreground/90 rounded-3xl p-8 lg:p-12 text-background text-center mb-16">
@@ -155,6 +127,13 @@ export function ContactSection() {
             </Button>
           </div>
         </footer>
+        
+        {/* Social Media Section - Bottom Center */}
+        <div className="flex justify-center mt-8 pt-6 border-t border-border/30">
+          <div className="flex items-center">
+            <AnimatedTooltip items={socialPlatforms} />
+          </div>
+        </div>
       </div>
     </section>
   )
