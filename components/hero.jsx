@@ -26,7 +26,7 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500 pt-20 sm:pt-24">
+    <section className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500 pt-18 sm:pt-22">
 
       {/* Subtle background gradient */}
       <div 
@@ -36,24 +36,14 @@ export function HeroSection() {
         }}
       />
       
-      <div className="relative z-10 min-h-[calc(100vh-5rem)] sm:min-h-[calc(100vh-6rem)] flex items-center">
+      <div className="relative z-10 min-h-[calc(100vh-8rem)] sm:min-h-[calc(100vh-8rem)] flex items-center">
         <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
             
             {/* Left Content - 7 columns */}
             <div className="lg:col-span-7 space-y-8">
               
-              {/* Status Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={isLoaded ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
-                <Badge className="inline-flex items-center gap-2 border-0 px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  Available for projects
-                </Badge>
-              </motion.div>
+
 
               {/* Main Heading */}
               <motion.div
@@ -111,7 +101,7 @@ export function HeroSection() {
             </div>
 
             {/* Right Content - 5 columns */}
-            <div className="lg:col-span-5 space-y-4 mt-16 lg:mt-8">
+            <div className="lg:col-span-5 space-y-4 mt-12 lg:mt-4">
               
               {/* Profile Card with Wobble Effect */}
               <motion.div
