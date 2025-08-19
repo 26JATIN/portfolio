@@ -65,6 +65,12 @@
   --foreground: oklch(0.145 0 0);
 }
 
+/* Default to dark theme to prevent flash */
+html {
+  background-color: #000000;
+  color: #ffffff;
+}
+
 /* Updated dark mode to true AMOLED black */
 .dark {
   --background: oklch(0 0 0); /* True AMOLED black background */

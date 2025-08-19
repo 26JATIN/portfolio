@@ -9,7 +9,7 @@ const ThemeProviderContext = createContext({
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
+  defaultTheme = "dark",
   storageKey = "cozy-ui-theme",
   attribute = "class",
   enableSystem = false,
