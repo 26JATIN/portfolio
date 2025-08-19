@@ -1073,12 +1073,12 @@ export function SelectedWorkSection() {
                 isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
               }`}
             >
-              <Button
+              {/* <Button
                 variant="default"
                 className="rounded-full px-4 sm:px-6 py-2 sm:py-3 bg-foreground text-background hover:bg-foreground/90 hover:scale-110 transform transition-all duration-300 hover:shadow-lg text-sm sm:text-base mb-6"
               >
                 See All
-              </Button>
+              </Button> */}
               
               {/* Category Filter Buttons */}
               <div className="space-y-3">
