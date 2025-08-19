@@ -28,7 +28,7 @@ export function Header() {
 		>
 			<div className="flex items-center gap-2">
 				<div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-xs sm:text-sm">
-					C
+					JG
 				</div>
 				<span className="text-base sm:text-lg font-semibold">Jatin Gupta</span>
 			</div>
