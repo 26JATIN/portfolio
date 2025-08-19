@@ -30,7 +30,7 @@ export function ContactSection() {
       id: 3,
       name: "LeetCode", 
       designation: "DSA Showcase",
-      image: "/icons/leetcode.png",
+      image: "/icons/x.png",
       url: "https://leetcode.com/u/JATINGUPTA26/"
     },
 
