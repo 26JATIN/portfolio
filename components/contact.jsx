@@ -23,14 +23,14 @@ export function ContactSection() {
       id: 2,
       name: "Instagram", 
       designation: "Behind the Scenes",
-      image: "/icons/instagram.png",
+      image: "/icons/x.png",
       url: "https://x.com/JatinGupta93145"
     },
       { 
       id: 3,
       name: "LeetCode", 
       designation: "DSA Showcase",
-      image: "/icons/x.png",
+      image: "/icons/leetcode.png",
       url: "https://leetcode.com/u/JATINGUPTA26/"
     },
 
