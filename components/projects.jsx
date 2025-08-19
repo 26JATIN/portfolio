@@ -76,13 +76,13 @@ const GallerySection = React.memo(({ gallery, title }) => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {gallery.map((image, imgIndex) => (
           <div key={imgIndex} className="rounded-lg overflow-hidden bg-transparent">
             <LazyImage 
               src={image.src} 
               alt={image.alt || `${title} - Image ${imgIndex + 1}`}
-              className="w-full h-48 sm:h-56 lg:h-64 object-cover gallery-image cursor-pointer transition-transform duration-300 hover:scale-105"
+              className="w-full h-auto min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] max-h-[800px] object-contain bg-gray-50 dark:bg-gray-800 gallery-image cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
             />
             {image.caption && (
               <div className="font-bold p-3 text-sm text-gray-600 dark:text-gray-300">
@@ -114,7 +114,7 @@ export const Card = React.memo(({
   // Memoize the card preview to prevent unnecessary re-renders
   const cardPreview = useMemo(() => (
     <div 
-      className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} p-4 sm:p-6 aspect-[4/3] overflow-hidden`}
+      className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} p-1 sm:p-2 aspect-[4/3] overflow-hidden`}
       style={{
         borderRadius: '24px 24px 4px 24px'
       }}
@@ -352,7 +352,7 @@ export const Card = React.memo(({
         whileHover={{ y: -8, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleOpen}
-        className="cursor-pointer card-hover"
+        className="cursor-pointer card-hover border border-gray-200 dark:border-white/10 rounded-3xl p-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm hover:shadow-lg"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}>
         {cardPreview}
         <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
@@ -390,6 +390,7 @@ export function SelectedWorkSection() {
   const [isVisible, setIsVisible] = useState(false)
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('ALL')
   const sectionRef = useRef(null)
 
   // Memoize intersection observer setup
@@ -984,6 +985,21 @@ export function SelectedWorkSection() {
     return projects.length > 0 ? projects : defaultProjects
   }, [projects])
 
+  // Get unique categories for filter buttons
+  const categories = useMemo(() => {
+    const allCategories = displayProjects.map(project => project.category)
+    const uniqueCategories = [...new Set(allCategories)]
+    return ['ALL', ...uniqueCategories]
+  }, [displayProjects])
+
+  // Filter projects based on selected category
+  const filteredProjects = useMemo(() => {
+    if (selectedCategory === 'ALL') {
+      return displayProjects
+    }
+    return displayProjects.filter(project => project.category === selectedCategory)
+  }, [displayProjects, selectedCategory])
+
   // Memoize loading skeleton
   const loadingSkeleton = useMemo(() => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -1005,16 +1021,27 @@ export function SelectedWorkSection() {
 
   // Memoize rendered projects
   const renderedProjects = useMemo(() => {
-    return displayProjects.map((project, index) => (
+    return filteredProjects.map((project, index) => (
       <motion.div
-        key={project.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-        transition={{ 
-          duration: 0.6, 
-          delay: 0.9 + (index * 0.1),
-          ease: "easeOut" 
+        key={`${selectedCategory}-${project.id}`}
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ 
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          transition: { 
+            duration: 0.6, 
+            delay: index * 0.1,
+            ease: "easeOut" 
+          }
         }}
+        exit={{ 
+          opacity: 0, 
+          y: -20, 
+          scale: 0.95,
+          transition: { duration: 0.3 }
+        }}
+        layout
       >
         <Card
           card={project}
@@ -1023,7 +1050,7 @@ export function SelectedWorkSection() {
         />
       </motion.div>
     ));
-  }, [displayProjects, isVisible]);
+  }, [filteredProjects, selectedCategory]);
 
   return (
     <section ref={sectionRef} className="bg-background">
@@ -1048,27 +1075,125 @@ export function SelectedWorkSection() {
             >
               <Button
                 variant="default"
-                className="rounded-full px-4 sm:px-6 py-2 sm:py-3 bg-foreground text-background hover:bg-foreground/90 hover:scale-110 transform transition-all duration-300 hover:shadow-lg text-sm sm:text-base"
+                className="rounded-full px-4 sm:px-6 py-2 sm:py-3 bg-foreground text-background hover:bg-foreground/90 hover:scale-110 transform transition-all duration-300 hover:shadow-lg text-sm sm:text-base mb-6"
               >
                 See All
               </Button>
+              
+              {/* Category Filter Buttons */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                  Filter by Category
+                </h3>
+                {/* Desktop: Vertical layout */}
+                <div className="hidden lg:flex flex-col gap-2">
+                  {categories.map((category) => {
+                    const count = category === 'ALL' 
+                      ? displayProjects.length 
+                      : displayProjects.filter(p => p.category === category).length
+                    
+                    return (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center justify-between group ${
+                          selectedCategory === category
+                            ? 'bg-foreground text-background shadow-md'
+                            : 'text-gray-600 dark:text-gray-300 hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        <span className="truncate">{category}</span>
+                        <span className={`ml-2 text-xs px-2 py-1 rounded-full transition-colors ${
+                          selectedCategory === category
+                            ? 'bg-background text-foreground'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-foreground group-hover:text-background'
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                {/* Mobile: Horizontal scrollable layout */}
+                <div className="lg:hidden overflow-x-auto">
+                  <div className="flex gap-2 pb-2">
+                    {categories.map((category) => {
+                      const count = category === 'ALL' 
+                        ? displayProjects.length 
+                        : displayProjects.filter(p => p.category === category).length
+                      
+                      return (
+                        <button
+                          key={category}
+                          onClick={() => setSelectedCategory(category)}
+                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                            selectedCategory === category
+                              ? 'bg-foreground text-background shadow-md'
+                              : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-gray-100 dark:bg-gray-800'
+                          }`}
+                        >
+                          <span>{category}</span>
+                          <span className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                            selectedCategory === category
+                              ? 'bg-background text-foreground'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                          }`}>
+                            {count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="w-full lg:w-4/5 overflow-y-auto">
           <div className="p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 sm:space-y-12">
+            {/* Filter Status Indicator */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={isVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4"
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {selectedCategory === 'ALL' ? 'All Projects' : selectedCategory}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {filteredProjects.length} of {displayProjects.length} projects
+                </p>
+              </div>
+              {selectedCategory !== 'ALL' && (
+                <button
+                  onClick={() => setSelectedCategory('ALL')}
+                  className="text-sm text-gray-500 hover:text-foreground transition-colors duration-200 flex items-center gap-2"
+                >
+                  <span>Clear filter</span>
+                  <span className="text-lg">×</span>
+                </button>
+              )}
+            </motion.div>
+
             {loading ? (
               loadingSkeleton
             ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-                transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
-              >
-                {renderedProjects}
-              </motion.div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedCategory}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
+                >
+                  {renderedProjects}
+                </motion.div>
+              </AnimatePresence>
             )}
           </div>
         </div>
