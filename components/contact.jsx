@@ -6,45 +6,50 @@ import { Badge } from "./ui/badge"
 import { AnimatedTooltip } from "./ui/animated-tooltip"
 import { LinkPreview } from "./ui/link-preview"
 import { WobbleCard } from "./ui/wobble-card"
+import { useTheme } from "./theme-provider"
+
 export function ContactSection() {
+  const { theme } = useTheme()
 
   const socialPlatforms = [
     { 
       id: 1,
-      name: "Instagram", 
-      designation: "Behind the Scenes",
-      image: "/icons/instagram.png",
-      url: "https://www.instagram.com/jatingupta_26"
+      name: "Github", 
+      designation: "Projects Showcase",
+      image: theme === "dark" ? "/icons/github-light.png" : "/icons/github-dark.png",
+      url: "https://github.com/26JATIN"
     },
     { 
       id: 2,
-      name: "LinkedIn", 
-      designation: "Professional Network",
-      image: "/icons/linkedin.png",
-      url: "https://www.linkedin.com/in/26jatin"
+      name: "Instagram", 
+      designation: "Behind the Scenes",
+      image: "/icons/instagram.png",
+      url: "https://x.com/JatinGupta93145"
     },
-    { 
+      { 
       id: 3,
+      name: "LeetCode", 
+      designation: "DSA Showcase",
+      image: "/icons/leetcode.png",
+      url: "https://leetcode.com/u/JATINGUPTA26/"
+    },
+
+
+    { 
+      id: 4,
       name: "Discord", 
       designation: "Design Portfolio",
       image: "/icons/discord.png",
       url: "https://discord.com/users/775586851960389682"
     },
     { 
-      id: 4,
-      name: "slack", 
-      designation: "Creative Showcase",
-      image: "/icons/slack.png",
-      url: "#"
-    },
-
-    { 
       id: 5,
-      name: "X", 
-      designation: "Thoughts & Updates",
-      image: "/icons/x.png",
-      url: "#"
+      name: "LinkedIn", 
+      designation: "Professional Network",
+      image: "/icons/linkedin.png",
+      url: "https://www.linkedin.com/in/26jatin"
     }
+
   ]
 
   return (

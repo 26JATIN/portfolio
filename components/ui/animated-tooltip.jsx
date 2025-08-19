@@ -9,10 +9,12 @@ import {
   useSpring,
 } from "motion/react";
 import { LinkPreview } from "./link-preview";
+import { useTheme } from "../theme-provider";
 
 export const AnimatedTooltip = ({
   items
 }) => {
+  const { theme } = useTheme();
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const springConfig = { stiffness: 100, damping: 15 };
   const x = useMotionValue(0);
@@ -56,7 +58,10 @@ export const AnimatedTooltip = ({
                 width={100}
                 src={item.image}
                 alt={item.name}
-                className="relative !m-0 h-14 w-14 rounded-full border-2 border-white object-cover object-center !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105 scale-110" />
+                className={`relative !m-0 h-14 w-14 rounded-full border-2 border-white object-cover object-center !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105 scale-110 ${
+                  item.name === "LeetCode" ? "bg-white" : 
+                  item.name === "Github" ? (theme === "dark" ? "bg-black" : "bg-white") : ""
+                }`} />
             </LinkPreview>
           ) : (
             <img
@@ -65,7 +70,10 @@ export const AnimatedTooltip = ({
               width={100}
               src={item.image}
               alt={item.name}
-              className="relative !m-0 h-14 w-14 rounded-full border-2 border-white object-cover object-center !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105 scale-110" />
+              className={`relative !m-0 h-14 w-14 rounded-full border-2 border-white object-cover object-center !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105 scale-110 ${
+                item.name === "LeetCode" ? "bg-white" : 
+                item.name === "Github" ? (theme === "dark" ? "bg-black" : "bg-white") : ""
+              }`} />
           )}
         </div>
       ))}
