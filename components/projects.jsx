@@ -78,7 +78,7 @@ const GallerySection = React.memo(({ gallery, title }) => {
       <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {gallery.map((image, imgIndex) => (
-          <div key={imgIndex} className="rounded-lg overflow-hidden bg-transparent">
+          <div key={imgIndex} className="rounded-lg overflow-hidden">
             <LazyImage 
               src={image.src} 
               alt={image.alt || `${title} - Image ${imgIndex + 1}`}
@@ -114,7 +114,7 @@ export const Card = React.memo(({
   // Memoize the card preview to prevent unnecessary re-renders
   const cardPreview = useMemo(() => (
     <div 
-      className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} p-1 sm:p-2 aspect-[4/3] overflow-hidden`}
+      className={`rounded-2xl transition-all duration-700 ease-out hover:scale-105 p-1 sm:p-2 aspect-[4/3] overflow-hidden`}
       style={{
         borderRadius: '24px 24px 4px 24px'
       }}
@@ -126,7 +126,7 @@ export const Card = React.memo(({
             alt={card.title}
             className="w-full h-full object-cover"
             placeholder={
-              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <div className="w-full h-full bg-white/5 dark:bg-gray-700 flex items-center justify-center">
                 <div className="text-center text-gray-500 dark:text-gray-400 p-4">
                   <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
                   <div className="text-xs sm:text-sm">Loading image...</div>
@@ -135,7 +135,7 @@ export const Card = React.memo(({
             }
           />
         ) : (
-          <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+          <div className="w-full h-full bg-white/5 dark:bg-gray-700 flex items-center justify-center">
             <div className="text-center text-gray-500 dark:text-gray-400 p-4">
               <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
               <div className="text-xs sm:text-sm">Hero image will appear here</div>
@@ -144,7 +144,7 @@ export const Card = React.memo(({
         )}
       </div>
     </div>
-  ), [card.heroImage, card.title, card.gradient]);
+  ), [card.heroImage, card.title]);
 
   // Load gallery images only when modal opens
   useEffect(() => {
@@ -274,7 +274,7 @@ export const Card = React.memo(({
               >
                 <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
                   {/* Hero Image/Preview */}
-                  <div className={`${card.gradient ? `bg-gradient-to-br ${card.gradient}` : 'bg-transparent'} rounded-2xl aspect-video p-4 sm:p-6 border-0 flex items-center justify-center`}>
+                  <div className={` rounded-2xl aspect-video p-4 sm:p-6 border-0 flex items-center justify-center`}>
                     {card.heroImage ? (
                       <LazyImage 
                         src={card.heroImage} 
@@ -352,7 +352,7 @@ export const Card = React.memo(({
         whileHover={{ y: -8, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleOpen}
-        className="cursor-pointer card-hover border border-gray-200 dark:border-white/10 rounded-3xl p-3 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm hover:shadow-lg"
+        className="cursor-pointer card-hover border border-gray-200 dark:border-white/10 rounded-3xl p-3 bg-white/50 dark:bg-white/5  shadow-sm hover:shadow-lg"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}>
         {cardPreview}
         <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
