@@ -71,33 +71,6 @@ const LazyImage = React.memo(({ src, alt, className, placeholder, onLoad, ...pro
 
 LazyImage.displayName = 'LazyImage';
 
-// Separate Gallery component for better performance
-const GallerySection = React.memo(({ gallery, title }) => {
-  return (
-    <div className="space-y-4 sm:space-y-6">
-      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Project Gallery</h4>
-      <div className="grid grid-cols-1 gap-4 sm:gap-6">
-        {gallery.map((image, imgIndex) => (
-          <div key={imgIndex} className="rounded-lg overflow-hidden">
-            <LazyImage 
-              src={image.src} 
-              alt={image.alt || `${title} - Image ${imgIndex + 1}`}
-              className="w-full h-auto min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] max-h-[800px] object-contain bg-gray-50 dark:bg-gray-800 gallery-image cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
-            />
-            {image.caption && (
-              <div className="font-bold p-3 text-sm text-gray-600 dark:text-gray-300">
-                {image.caption}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-});
-
-GallerySection.displayName = 'GallerySection';
-
 export const Card = React.memo(({
   card,
   index,
@@ -105,7 +78,6 @@ export const Card = React.memo(({
   onClick
 }) => {
   const [open, setOpen] = useState(false);
-  const [galleryLoaded, setGalleryLoaded] = useState(false);
   const containerRef = useRef(null);
   const modalContentRef = useRef(null);
   const modalLenisRef = useRef(null);
@@ -145,13 +117,6 @@ export const Card = React.memo(({
       </div>
     </div>
   ), [card.heroImage, card.title]);
-
-  // Load gallery images only when modal opens
-  useEffect(() => {
-    if (open && !galleryLoaded) {
-      setGalleryLoaded(true);
-    }
-  }, [open, galleryLoaded]);
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -306,11 +271,6 @@ export const Card = React.memo(({
                        }}>
                     {card.content}
                   </div>
-
-                  {/* Project Gallery - Lazy loaded only when modal opens */}
-                  {galleryLoaded && card.gallery && card.gallery.length > 0 && (
-                    <GallerySection gallery={card.gallery} title={card.title} />
-                  )}
 
                   {/* Technical Details */}
                   {card.techStack && card.techStack.length > 0 && (
@@ -567,28 +527,6 @@ export function SelectedWorkSection() {
       type: "wellness",
       liveUrl: "https://zenpoint-wellness.com",
       techStack: ["React", "Next.js", "Tailwind CSS", "Framer Motion", "Node.js", "MongoDB"],
-      gallery: [
-        {
-          src: "/zenpoint-gallery-1.jpg",
-          alt: "ZenPoint Homepage Design",
-          caption: "Clean and calming homepage design with intuitive navigation"
-        },
-        {
-          src: "/zenpoint-gallery-2.jpg", 
-          alt: "Meditation Sessions Interface",
-          caption: "Interactive meditation sessions with customizable timers"
-        },
-        {
-          src: "/zenpoint-gallery-3.jpg",
-          alt: "Progress Tracking Dashboard",
-          caption: "Comprehensive progress tracking and wellness analytics"
-        },
-        {
-          src: "/zenpoint-gallery-4.jpg",
-          alt: "Mobile App Interface",
-          caption: "Responsive mobile design for on-the-go mindfulness"
-        }
-      ],
       preview: (
         <>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2 sm:gap-0">
@@ -691,28 +629,6 @@ export function SelectedWorkSection() {
       type: "ecommerce",
       liveUrl: "https://timber-elegance.com",
       techStack: ["Next.js", "TypeScript", "Shopify", "Three.js", "Stripe", "Sanity CMS"],
-      gallery: [
-        {
-          src: "/timber-gallery-1.jpg",
-          alt: "Product Catalog Page",
-          caption: "Elegant product grid showcasing premium furniture pieces"
-        },
-        {
-          src: "/timber-gallery-2.jpg",
-          alt: "Product Detail View",
-          caption: "Detailed product views with 360° rotation and material close-ups"
-        },
-        {
-          src: "/timber-gallery-3.jpg",
-          alt: "AR Visualization",
-          caption: "Augmented reality feature for placing furniture in user's space"
-        },
-        {
-          src: "/timber-gallery-4.jpg",
-          alt: "Sustainability Page",
-          caption: "Transparency in sourcing and environmental commitment"
-        }
-      ],
       preview: (
         <>
           <div className="absolute top-3 right-3">
@@ -759,7 +675,6 @@ export function SelectedWorkSection() {
               <li><strong>Material Close-ups:</strong> Macro photography revealing wood grain patterns and finish quality</li>
               <li><strong>AR Visualization:</strong> Augmented reality feature allowing customers to place furniture in their space</li>
               <li><strong>Sustainability Certificates:</strong> Digital certificates and sourcing transparency for each product</li>
-              <li><strong>Customer Gallery:</strong> Real customer photos showing furniture in actual homes</li>
               <li><strong>Virtual Showroom:</strong> 3D rendered rooms showcasing furniture in context</li>
             </ul>
           </div>
@@ -799,28 +714,6 @@ export function SelectedWorkSection() {
       type: "agency",
       liveUrl: "https://digital-agency-pro.com",
       techStack: ["React", "Gatsby", "GraphQL", "Contentful", "GSAP", "Netlify"],
-      gallery: [
-        {
-          src: "/agency-gallery-1.jpg",
-          alt: "Agency Homepage",
-          caption: "Bold and creative homepage design with interactive elements"
-        },
-        {
-          src: "/agency-gallery-2.jpg",
-          alt: "Portfolio Showcase",
-          caption: "Dynamic portfolio grid with hover effects and case study previews"
-        },
-        {
-          src: "/agency-gallery-3.jpg",
-          alt: "Team Section",
-          caption: "Meet the team section with personality-driven profiles"
-        },
-        {
-          src: "/agency-gallery-4.jpg",
-          alt: "Contact Form",
-          caption: "Streamlined contact and project inquiry system"
-        }
-      ],
       preview: (
         <>
           <div className="flex justify-between items-start mb-4">
@@ -892,28 +785,6 @@ export function SelectedWorkSection() {
       type: "fintech",
       liveUrl: "https://mobile-fintech-app.com",
       techStack: ["React Native", "Node.js", "PostgreSQL", "Redis", "AWS", "Stripe"],
-      gallery: [
-        {
-          src: "/fintech-gallery-1.jpg",
-          alt: "App Dashboard",
-          caption: "Clean and intuitive dashboard with financial overview"
-        },
-        {
-          src: "/fintech-gallery-2.jpg",
-          alt: "Transaction Flow",
-          caption: "Secure and seamless money transfer interface"
-        },
-        {
-          src: "/fintech-gallery-3.jpg",
-          alt: "Security Features",
-          caption: "Biometric authentication and security settings"
-        },
-        {
-          src: "/fintech-gallery-4.jpg",
-          alt: "Analytics View",
-          caption: "Personal finance analytics and spending insights"
-        }
-      ],
       preview: (
         <>
           <div className="space-y-3">
@@ -1062,7 +933,7 @@ export function SelectedWorkSection() {
                 isVisible ? "translate-y-0 opacity-100" : "translate-y-[50vh] opacity-0"
               }`}
             >
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 lg:mb-8 hover:text-cyan-500 transition-colors duration-300 cursor-default hover:scale-105 transform transition-transform">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 lg:mb-8 hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform">
                 Selected
                 <br />
                 work
@@ -1313,19 +1184,6 @@ export function SelectedWorkSection() {
     color: #f9fafb;
   }
 
-  /* Optimized image hover effects with GPU acceleration */
-  .gallery-image {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    /* Use transform3d for GPU acceleration */
-    transform: translate3d(0, 0, 0);
-    will-change: transform;
-  }
-
-  .gallery-image:hover {
-    transform: scale3d(1.05, 1.05, 1) translate3d(0, 0, 0);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-
   /* Performance optimization for animations */
   .card-hover {
     will-change: transform;
@@ -1334,7 +1192,6 @@ export function SelectedWorkSection() {
 
   /* Reduce motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
-    .gallery-image,
     .card-hover,
     * {
       animation-duration: 0.01ms !important;
