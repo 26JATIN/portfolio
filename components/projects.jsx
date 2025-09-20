@@ -71,16 +71,21 @@ const LazyImage = React.memo(({ src, alt, className, placeholder, onLoad, ...pro
 
 LazyImage.displayName = 'LazyImage';
 
+// Iframe cache to store loaded iframes and avoid reloading
+const iframeCache = new Map();
+
 export const Card = React.memo(({
   card,
   index,
   layout = false,
   onClick
 }) => {
-  const [open, setOpen] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+  const [iframeCached, setIframeCached] = useState(false);
   const containerRef = useRef(null);
-  const modalContentRef = useRef(null);
-  const modalLenisRef = useRef(null);
+  const iframeRef = useRef(null);
   const isMobile = useIsMobile();
 
   // Memoize the card preview to prevent unnecessary re-renders
@@ -120,12 +125,17 @@ export const Card = React.memo(({
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === "Escape") {
-        handleClose();
+      if (event.key === "Escape" && showIframe) {
+        handleCloseIframe();
+      }
+      // Refresh iframe with Cmd/Ctrl + R
+      if ((event.metaKey || event.ctrlKey) && event.key === 'r' && showIframe) {
+        event.preventDefault();
+        handleRefreshIframe();
       }
     }
 
-    if (open) {
+    if (showIframe) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
@@ -133,180 +143,228 @@ export const Card = React.memo(({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  }, [showIframe]);
 
-  // Initialize Lenis for modal content
-  useEffect(() => {
-    if (open && modalContentRef.current) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        modalLenisRef.current = new Lenis({
-          wrapper: modalContentRef.current,
-          content: modalContentRef.current.firstChild,
-          duration: isMobile ? 0.8 : 1.2,
-          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          direction: 'vertical',
-          gestureDirection: 'vertical',
-          smooth: true,
-          mouseMultiplier: 1,
-          smoothTouch: true, // Enable smooth touch scrolling on mobile
-          touchMultiplier: isMobile ? 1.5 : 2, // Adjusted for better mobile experience
-          infinite: false,
-        })
-
-        function raf(time) {
-          modalLenisRef.current?.raf(time)
-          if (modalLenisRef.current) {
-            requestAnimationFrame(raf)
-          }
-        }
-        requestAnimationFrame(raf)
-      }, 100)
+  useOutsideClick(containerRef, () => {
+    if (showIframe) {
+      handleCloseIframe();
     }
-
-    return () => {
-      if (modalLenisRef.current) {
-        modalLenisRef.current.destroy()
-        modalLenisRef.current = null
-      }
-    }
-  }, [open, isMobile])
-
-  useOutsideClick(containerRef, () => handleClose());
+  });
 
   const handleOpen = () => {
-    setOpen(true);
+    if (card.liveUrl) {
+      setShowIframe(true);
+      
+      // Check if iframe is cached
+      const cacheKey = `iframe-${card.id || card.title}`;
+      if (iframeCache.has(cacheKey)) {
+        setIframeLoaded(true);
+        setIframeCached(true);
+        setIframeError(false);
+      } else {
+        setIframeLoaded(false);
+        setIframeCached(false);
+        setIframeError(false);
+      }
+    }
     if (onClick) onClick(card);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCloseIframe = () => {
+    setShowIframe(false);
+    setIframeLoaded(false);
+    setIframeError(false);
+  };
+
+  const handleIframeLoad = () => {
+    setIframeLoaded(true);
+    setIframeError(false);
     
-    // Cleanup modal Lenis instance
-    if (modalLenisRef.current) {
-      modalLenisRef.current.destroy()
-      modalLenisRef.current = null
+    // Cache the iframe
+    const cacheKey = `iframe-${card.id || card.title}`;
+    if (!iframeCache.has(cacheKey)) {
+      iframeCache.set(cacheKey, {
+        url: card.liveUrl,
+        loadedAt: Date.now(),
+        title: card.title
+      });
+      setIframeCached(true);
+    }
+  };
+
+  const handleIframeError = () => {
+    setIframeError(true);
+    setIframeLoaded(false);
+  };
+
+  const handleRefreshIframe = () => {
+    setIframeLoaded(false);
+    setIframeError(false);
+    setIframeCached(false);
+    
+    // Clear cache for this iframe
+    const cacheKey = `iframe-${card.id || card.title}`;
+    iframeCache.delete(cacheKey);
+    
+    // Force iframe refresh by updating src
+    if (iframeRef.current) {
+      iframeRef.current.src = iframeRef.current.src;
     }
   };
 
   return (
     <>
+      {/* Website Iframe Modal */}
       <AnimatePresence>
-        {open && (
+        {showIframe && (
           <div className="fixed inset-0 z-50 h-screen overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg" />
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg" 
+            />
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className={`relative z-[60] mx-auto my-4 h-[calc(100vh-2rem)] max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900 flex flex-col ${isMobile ? 'mx-2' : ''}`}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-              
-              {/* Fixed Header */}
-              <div className="flex-shrink-0 p-6 border-b border-gray-200 dark:border-gray-700">
-                <button
-                  className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm transition-colors dark:bg-white/10 dark:hover:bg-white/20"
-                  onClick={handleClose}>
-                  <span className="text-black dark:text-white">✕</span>
-                </button>
-                <motion.p
-                  layoutId={layout ? `category-${card.title}` : undefined}
-                  className="text-base font-medium text-black dark:text-white">
-                  {card.category}
-                </motion.p>
-                <motion.p
-                  layoutId={layout ? `title-${card.title}` : undefined}
-                  className="mt-2 text-2xl font-semibold text-neutral-700 md:text-4xl dark:text-white">
-                  {card.title}
-                </motion.p>
+              className={`relative z-[60] h-full w-full bg-white/5 dark:bg-black/5 backdrop-blur-xl border border-white/10 dark:border-white/5 flex flex-col`}
+              transition={{ 
+                type: "spring", 
+                stiffness: 300, 
+                damping: 30
+              }}
+            >
+              {/* Minimal Header with transparent blur */}
+              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-white/10 bg-white/10 dark:bg-black/10 backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleCloseIframe}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                  >
+                    <span className="text-gray-800 dark:text-gray-200">←</span>
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <motion.div 
+                      className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded"
+                      initial={{ rotate: 0 }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    ></motion.div>
+                    <div>
+                      <h3 className="font-medium text-gray-900 dark:text-white text-sm">{card.title}</h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-[300px]">
+                        {card.liveUrl}
+                      </p>
+                      {iframeCached && (
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          ⚡ Cached
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Simple Controls with transparent styling */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRefreshIframe}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                    title="Refresh (Cmd/Ctrl + R)"
+                  >
+                    <span className="text-gray-700 dark:text-gray-200 text-sm">↻</span>
+                  </button>
+                  <button
+                    onClick={() => window.open(card.liveUrl, '_blank')}
+                    className="px-3 py-1.5 text-xs font-medium bg-blue-500/80 hover:bg-blue-600/80 backdrop-blur-sm text-white rounded-full transition-all duration-200 hover:scale-105"
+                  >
+                    Open in New Tab
+                  </button>
+                  <button
+                    onClick={handleCloseIframe}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                  >
+                    <span className="text-gray-700 dark:text-gray-200 text-sm">✕</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Scrollable Content */}
-              <div 
-                ref={modalContentRef}
-                className={`flex-1 overflow-auto modal-scrollbar ${isMobile ? 'touch-pan-y' : ''}`}
-                style={{ 
-                  height: 'calc(100% - 120px)',
-                  WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
-                  overscrollBehavior: 'contain' // Prevent overscroll bounce
-                }}
-              >
-                <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-                  {/* Hero Image/Preview */}
-                  <div className={` rounded-2xl aspect-video p-4 sm:p-6 border-0 flex items-center justify-center`}>
-                    {card.heroImage ? (
-                      <LazyImage 
-                        src={card.heroImage} 
-                        alt={card.title}
-                        className="w-full h-full object-cover rounded-lg border-0 outline-none"
-                      />
-                    ) : (
-                      <div className="text-center text-gray-500 dark:text-gray-400">
-                        <div className="text-lg sm:text-xl font-medium">{card.title}</div>
-                        <div className="text-sm mt-2">Hero image would go here</div>
+              {/* Iframe Container with transparent background */}
+              <div className="flex-1 relative bg-transparent">
+                {(!iframeLoaded && !iframeError) && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-lg"
+                  >
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-800 dark:text-gray-200">
+                        {iframeCached ? 'Loading from cache...' : 'Loading website...'}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-2">
+                        {iframeCached ? 'This should be instant' : 'This may take a few seconds'}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {iframeError && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-lg"
+                  >
+                    <div className="text-center max-w-md mx-auto p-6">
+                      <div className="w-16 h-16 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-red-600 dark:text-red-400 text-2xl">⚠</span>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Project Details */}
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {card.tags.map((tag, tagIndex) => (
-                      <Badge key={tagIndex} variant="secondary" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {/* Main Content with improved typography */}
-                  <div className="prose prose-sm sm:prose-base lg:prose-lg prose-gray max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-white prose-li:text-gray-600 dark:prose-li:text-gray-300"
-                       style={{
-                         fontSize: 'clamp(14px, 2.5vw, 16px)',
-                         lineHeight: '1.7'
-                       }}>
-                    {card.content}
-                  </div>
-
-                  {/* Technical Details */}
-                  {card.techStack && card.techStack.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Technology Stack</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {card.techStack.map((tech, techIndex) => (
-                          <span 
-                            key={techIndex}
-                            className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
-                          >
-                            {tech}
-                          </span>
-                        ))}
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Cannot display website
+                      </h3>
+                      <p className="text-gray-700 dark:text-gray-200 text-sm mb-6">
+                        This website doesn't allow embedding. You can still visit it in a new tab.
+                      </p>
+                      <div className="flex gap-3 justify-center">
+                        <button
+                          onClick={() => window.open(card.liveUrl, '_blank')}
+                          className="px-4 py-2 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm text-white rounded-lg transition-colors"
+                        >
+                          Open in New Tab
+                        </button>
+                        <button
+                          onClick={handleCloseIframe}
+                          className="px-4 py-2 bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+                        >
+                          Close
+                        </button>
                       </div>
                     </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Button className="rounded-full flex-1 sm:flex-none" size="lg">
-                      {card.liveUrl ? 'View Live Site' : 'View Project'}
-                    </Button>
-                    <Button variant="outline" className="rounded-full flex-1 sm:flex-none" size="lg">
-                      Case Study
-                    </Button>
-                  </div>
-
-                  {/* Extra spacing for better scroll experience */}
-                  <div className="h-8 sm:h-12"></div>
-                </div>
+                  </motion.div>
+                )}
+                
+                <iframe
+                  ref={iframeRef}
+                  src={card.liveUrl}
+                  className={`w-full h-full border-0 bg-transparent transition-opacity duration-500 ${
+                    iframeLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={handleIframeLoad}
+                  onError={handleIframeError}
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-links allow-popups allow-popups-to-escape-sandbox"
+                  loading="lazy"
+                  title={`${card.title} - Live Website`}
+                />
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
       <motion.div
         layoutId={layout ? `card-${card.title}` : undefined}
         whileHover={{ y: -8, scale: 1.02 }}
