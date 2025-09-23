@@ -158,9 +158,16 @@ export const Card = React.memo(({
       // Check if iframe is cached
       const cacheKey = `iframe-${card.id || card.title}`;
       if (iframeCache.has(cacheKey)) {
+        const cachedData = iframeCache.get(cacheKey);
         setIframeLoaded(true);
         setIframeCached(true);
         setIframeError(false);
+        
+        // Update cache access time
+        iframeCache.set(cacheKey, {
+          ...cachedData,
+          lastAccessed: Date.now()
+        });
       } else {
         setIframeLoaded(false);
         setIframeCached(false);
@@ -180,16 +187,78 @@ export const Card = React.memo(({
     setIframeLoaded(true);
     setIframeError(false);
     
-    // Cache the iframe
+    // Cache the iframe for this specific card
     const cacheKey = `iframe-${card.id || card.title}`;
     if (!iframeCache.has(cacheKey)) {
       iframeCache.set(cacheKey, {
         url: card.liveUrl,
         loadedAt: Date.now(),
-        title: card.title
+        title: card.title,
+        status: 'loaded'
       });
       setIframeCached(true);
     }
+    
+    // Pre-cache other websites in the background for faster future loading
+    setTimeout(() => {
+      preloadOtherWebsites();
+    }, 2000); // Wait 2 seconds after current iframe loads
+  };
+
+  // Function to preload other websites in invisible iframes for caching
+  const preloadOtherWebsites = () => {
+    // Get other projects from the parent component context if available
+    // For now, we'll use the default projects list
+    const allProjects = [
+      { id: 1, title: "ZENPOINT WELLNESS", liveUrl: "https://zenpoint-wellness.com" },
+      { id: 2, title: "TIMBER ELEGANCE", liveUrl: "https://timber-elegance.com" },
+      { id: 3, title: "DIGITAL AGENCY PRO", liveUrl: "https://digital-agency-pro.com" },
+      { id: 4, title: "MOBILE FINTECH", liveUrl: "https://mobile-fintech-app.com" }
+    ];
+
+    allProjects.forEach(project => {
+      const cacheKey = `iframe-${project.id || project.title}`;
+      
+      // Skip if already cached or is current project
+      if (iframeCache.has(cacheKey) || project.id === card.id) return;
+      
+      // Create invisible iframe for preloading
+      const preloadIframe = document.createElement('iframe');
+      preloadIframe.src = project.liveUrl;
+      preloadIframe.style.position = 'absolute';
+      preloadIframe.style.left = '-9999px';
+      preloadIframe.style.width = '1px';
+      preloadIframe.style.height = '1px';
+      preloadIframe.style.opacity = '0';
+      preloadIframe.style.pointerEvents = 'none';
+      
+      preloadIframe.onload = () => {
+        // Cache the preloaded website
+        iframeCache.set(cacheKey, {
+          url: project.liveUrl,
+          loadedAt: Date.now(),
+          title: project.title,
+          status: 'preloaded'
+        });
+        
+        // Remove the preload iframe after a short delay
+        setTimeout(() => {
+          if (preloadIframe.parentNode) {
+            preloadIframe.parentNode.removeChild(preloadIframe);
+          }
+        }, 1000);
+      };
+      
+      preloadIframe.onerror = () => {
+        // Remove failed preload iframe
+        if (preloadIframe.parentNode) {
+          preloadIframe.parentNode.removeChild(preloadIframe);
+        }
+      };
+      
+      // Add to document body for preloading
+      document.body.appendChild(preloadIframe);
+    });
   };
 
   const handleIframeError = () => {
@@ -206,9 +275,11 @@ export const Card = React.memo(({
     const cacheKey = `iframe-${card.id || card.title}`;
     iframeCache.delete(cacheKey);
     
-    // Force iframe refresh by updating src
+    // Force iframe refresh by updating src with timestamp
     if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
+      const url = new URL(card.liveUrl);
+      url.searchParams.set('_refresh', Date.now().toString());
+      iframeRef.current.src = url.toString();
     }
   };
 
@@ -239,55 +310,46 @@ export const Card = React.memo(({
               }}
             >
               {/* Minimal Header with transparent blur */}
-              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-white/10 bg-white/10 dark:bg-black/10 backdrop-blur-md">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={handleCloseIframe}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm transition-all duration-200 hover:scale-105"
-                  >
-                    <span className="text-gray-800 dark:text-gray-200">←</span>
-                  </button>
-                  <div className="flex items-center gap-3">
-                    <motion.div 
-                      className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded"
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    ></motion.div>
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white text-sm">{card.title}</h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-[300px]">
-                        {card.liveUrl}
-                      </p>
-                      {iframeCached && (
-                        <p className="text-xs text-green-600 dark:text-green-400">
-                          ⚡ Cached
-                        </p>
-                      )}
-                    </div>
+              <div className="flex-shrink-0 flex items-center justify-between p-2 border-b border-white/5 bg-white/5 dark:bg-black/5 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <motion.div 
+                    className="w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-sm"
+                    initial={{ rotate: 0 }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  ></motion.div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-gray-900 dark:text-white text-xs truncate max-w-[200px]">
+                      {card.title}
+                    </h3>
+                    {iframeCached && (
+                      <span className="text-xs text-green-500 dark:text-green-400">⚡</span>
+                    )}
                   </div>
                 </div>
                 
-                {/* Simple Controls with transparent styling */}
-                <div className="flex items-center gap-2">
+                {/* Minimal Controls */}
+                <div className="flex items-center gap-1">
                   <button
                     onClick={handleRefreshIframe}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
                     title="Refresh (Cmd/Ctrl + R)"
                   >
-                    <span className="text-gray-700 dark:text-gray-200 text-sm">↻</span>
+                    <span className="text-gray-700 dark:text-gray-200 text-xs">↻</span>
                   </button>
                   <button
                     onClick={() => window.open(card.liveUrl, '_blank')}
-                    className="px-3 py-1.5 text-xs font-medium bg-blue-500/80 hover:bg-blue-600/80 backdrop-blur-sm text-white rounded-full transition-all duration-200 hover:scale-105"
+                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+                    title="Open in New Tab"
                   >
-                    Open in New Tab
+                    <span className="text-gray-700 dark:text-gray-200 text-xs">↗</span>
                   </button>
                   <button
                     onClick={handleCloseIframe}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-red-500/20 dark:bg-black/10 dark:hover:bg-red-500/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+                    title="Close (Esc)"
                   >
-                    <span className="text-gray-700 dark:text-gray-200 text-sm">✕</span>
+                    <span className="text-gray-700 dark:text-gray-200 hover:text-red-500 text-xs">✕</span>
                   </button>
                 </div>
               </div>
@@ -299,15 +361,15 @@ export const Card = React.memo(({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-lg"
+                    className="absolute inset-0 flex items-center justify-center bg-white/10 dark:bg-black/10 backdrop-blur-lg"
                   >
                     <div className="text-center">
-                      <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-800 dark:text-gray-200">
+                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-gray-800 dark:text-gray-200 text-sm font-medium">
                         {iframeCached ? 'Loading from cache...' : 'Loading website...'}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-2">
-                        {iframeCached ? 'This should be instant' : 'This may take a few seconds'}
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                        {iframeCached ? 'This should be instant ⚡' : 'This may take a few seconds'}
                       </p>
                     </div>
                   </motion.div>
@@ -317,28 +379,28 @@ export const Card = React.memo(({
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute inset-0 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-lg"
+                    className="absolute inset-0 flex items-center justify-center bg-white/10 dark:bg-black/10 backdrop-blur-lg"
                   >
-                    <div className="text-center max-w-md mx-auto p-6">
-                      <div className="w-16 h-16 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-red-600 dark:text-red-400 text-2xl">⚠</span>
+                    <div className="text-center max-w-sm mx-auto p-6">
+                      <div className="w-12 h-12 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span className="text-red-600 dark:text-red-400 text-lg">⚠</span>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
                         Cannot display website
                       </h3>
-                      <p className="text-gray-700 dark:text-gray-200 text-sm mb-6">
-                        This website doesn't allow embedding. You can still visit it in a new tab.
+                      <p className="text-gray-700 dark:text-gray-200 text-xs mb-4">
+                        This website doesn't allow embedding.
                       </p>
-                      <div className="flex gap-3 justify-center">
+                      <div className="flex gap-2 justify-center">
                         <button
                           onClick={() => window.open(card.liveUrl, '_blank')}
-                          className="px-4 py-2 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm text-white rounded-lg transition-colors"
+                          className="px-3 py-1.5 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm text-white rounded-md transition-colors text-xs"
                         >
                           Open in New Tab
                         </button>
                         <button
                           onClick={handleCloseIframe}
-                          className="px-4 py-2 bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+                          className="px-3 py-1.5 bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-md transition-colors text-xs"
                         >
                           Close
                         </button>
