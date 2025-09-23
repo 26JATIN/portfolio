@@ -19,7 +19,7 @@ import Lenis from '@studio-freight/lenis'
 // Enhanced configuration for optimal performance
 const PREVIEW_CONFIG = {
   enablePreview: true,
-  mobilePreview: false, // Keep disabled on mobile for performance
+  mobilePreview: true, // Keep disabled on mobile for performance
   previewScale: 0.6,
   lazyLoadThreshold: 0.2,
   lazyLoadRootMargin: '200px',
