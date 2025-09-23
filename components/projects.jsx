@@ -13,15 +13,230 @@ import { useOutsideClick } from "@/hooks/use-outside-click";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
+import { X, ExternalLink, Github, RefreshCw, Monitor } from "lucide-react";
 import Lenis from '@studio-freight/lenis'
 
-// Lazy loading image component
-const LazyImage = React.memo(({ src, alt, className, placeholder, onLoad, ...props }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const imgRef = useRef(null);
+// Enhanced configuration for optimal performance
+const PREVIEW_CONFIG = {
+  enablePreview: true,
+  mobilePreview: false, // Keep disabled on mobile for performance
+  previewScale: 0.6,
+  lazyLoadThreshold: 0.2,
+  lazyLoadRootMargin: '200px',
+  maxConcurrentPreviews: 3, // Limit concurrent iframes to prevent crashes
+  maxCacheSize: 6, // Maximum cached iframes
+  cacheTimeout: 5 * 60 * 1000, // 5 minutes cache timeout
+  previewDelay: 500, // Delay before loading preview
+  retryAttempts: 2,
+  retryDelay: 1000,
+};
 
+// Enhanced iframe cache with intelligent management
+class IframeManager {
+  constructor() {
+    this.cache = new Map();
+    this.activeIframes = new Set();
+    this.loadQueue = [];
+    this.isProcessingQueue = false;
+    this.observer = null;
+    
+    // Only setup observer on client side
+    if (typeof window !== 'undefined') {
+      this.setupIntersectionObserver();
+    }
+  }
+
+  setupIntersectionObserver() {
+    // Check if IntersectionObserver is available
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const url = entry.target.dataset.url;
+            if (entry.isIntersecting) {
+              this.queueLoad(url, entry.target);
+            } else {
+              this.handleIntersectionExit(url, entry.target);
+            }
+          });
+        },
+        {
+          threshold: PREVIEW_CONFIG.lazyLoadThreshold,
+          rootMargin: PREVIEW_CONFIG.lazyLoadRootMargin,
+        }
+      );
+    }
+  }
+
+  queueLoad(url, element) {
+    if (!this.cache.has(url) && !this.loadQueue.find(item => item.url === url)) {
+      this.loadQueue.push({ url, element, timestamp: Date.now() });
+      this.processQueue();
+    }
+  }
+
+  async processQueue() {
+    if (this.isProcessingQueue || this.loadQueue.length === 0) return;
+    
+    this.isProcessingQueue = true;
+    
+    while (this.loadQueue.length > 0 && this.activeIframes.size < PREVIEW_CONFIG.maxConcurrentPreviews) {
+      const item = this.loadQueue.shift();
+      await this.loadIframe(item);
+      // Small delay between loads to prevent overwhelming the browser
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    this.isProcessingQueue = false;
+  }
+
+  async loadIframe({ url, element }) {
+    // Only proceed on client side
+    if (typeof window === 'undefined' || this.activeIframes.has(url)) return;
+
+    try {
+      this.activeIframes.add(url);
+      
+      // Create iframe element
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.style.cssText = `
+        width: 100%;
+        height: 100%;
+        border: none;
+        transform: scale(${PREVIEW_CONFIG.previewScale});
+        transform-origin: top left;
+        width: ${100 / PREVIEW_CONFIG.previewScale}%;
+        height: ${100 / PREVIEW_CONFIG.previewScale}%;
+        pointer-events: none;
+      `;
+      iframe.sandbox = "allow-same-origin allow-scripts allow-forms allow-links";
+      iframe.loading = "lazy";
+
+      const loadPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Iframe load timeout'));
+        }, 10000);
+
+        iframe.onload = () => {
+          clearTimeout(timeout);
+          resolve(iframe);
+        };
+
+        iframe.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Iframe load error'));
+        };
+      });
+
+      const loadedIframe = await loadPromise;
+      
+      // Cache the successfully loaded iframe
+      this.cache.set(url, {
+        iframe: loadedIframe.cloneNode(true),
+        timestamp: Date.now(),
+        accessCount: 1,
+      });
+
+      // Clean up old cache entries
+      this.cleanupCache();
+
+    } catch (error) {
+      console.warn(`Failed to load iframe for ${url}:`, error);
+    } finally {
+      this.activeIframes.delete(url);
+      this.processQueue(); // Continue processing queue
+    }
+  }
+
+  handleIntersectionExit(url, element) {
+    // Optional: Handle when iframe goes out of view
+    // We keep it loaded for performance unless cache is full
+  }
+
+  getCachedIframe(url) {
+    if (this.cache.has(url)) {
+      const cached = this.cache.get(url);
+      // Update access info
+      cached.accessCount++;
+      cached.timestamp = Date.now();
+      return cached.iframe.cloneNode(true);
+    }
+    return null;
+  }
+
+  cleanupCache() {
+    if (this.cache.size <= PREVIEW_CONFIG.maxCacheSize) return;
+
+    // Remove oldest entries
+    const entries = Array.from(this.cache.entries());
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+    
+    const toRemove = entries.slice(0, entries.length - PREVIEW_CONFIG.maxCacheSize);
+    toRemove.forEach(([url]) => {
+      this.cache.delete(url);
+    });
+  }
+
+  observe(element, url) {
+    if (this.observer && element) {
+      element.dataset.url = url;
+      this.observer.observe(element);
+    }
+  }
+
+  unobserve(element) {
+    if (this.observer && element) {
+      this.observer.unobserve(element);
+    }
+  }
+
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    this.cache.clear();
+    this.activeIframes.clear();
+    this.loadQueue = [];
+  }
+}
+
+// Global iframe manager instance - initialized on client side only
+let iframeManager = null;
+
+// Initialize iframe manager on client side
+if (typeof window !== 'undefined') {
+  iframeManager = new IframeManager();
+}
+
+// Enhanced Preview iframe component with intelligent caching
+const PreviewIframe = React.memo(({ url, title, className, onLoad, onError, isModal = false }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const iframeRef = useRef(null);
+  const containerRef = useRef(null);
+  const loadTimeoutRef = useRef(null);
+
+  // Check if iframe is cached
+  const [isCached, setIsCached] = useState(() => {
+    return iframeManager ? iframeManager.getCachedIframe(url) !== null : false;
+  });
+
+  // Intersection observer for lazy loading (only for cards, not modal)
   useEffect(() => {
+    if (isModal) {
+      setIsInView(true);
+      return;
+    }
+
+    // Only setup observer on client side
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsInView(true); // Fallback to immediate loading
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -29,50 +244,165 @@ const LazyImage = React.memo(({ src, alt, className, placeholder, onLoad, ...pro
           observer.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: '50px' }
+      { 
+        threshold: PREVIEW_CONFIG.lazyLoadThreshold, 
+        rootMargin: PREVIEW_CONFIG.lazyLoadRootMargin 
+      }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+      // Also register with iframe manager if available
+      if (iframeManager) {
+        iframeManager.observe(containerRef.current, url);
+      }
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      observer.disconnect();
+      if (containerRef.current && iframeManager) {
+        iframeManager.unobserve(containerRef.current);
+      }
+    };
+  }, [url, isModal]);
+
+  // Load iframe with caching
+  useEffect(() => {
+    if (!isInView) return;
+
+    const loadIframe = async () => {
+      // Check cache first (only if iframe manager is available)
+      if (iframeManager) {
+        const cachedIframe = iframeManager.getCachedIframe(url);
+        if (cachedIframe && iframeRef.current) {
+          // Use cached iframe
+          iframeRef.current.src = cachedIframe.src;
+          setIsLoaded(true);
+          setIsCached(true);
+          setHasError(false);
+          onLoad?.();
+          return;
+        }
+      }
+
+      // Load with delay to prevent overwhelming browser
+      const delay = isModal ? 0 : PREVIEW_CONFIG.previewDelay;
+      loadTimeoutRef.current = setTimeout(() => {
+        if (iframeRef.current) {
+          iframeRef.current.src = url;
+        }
+      }, delay);
+    };
+
+    loadIframe();
+
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+    };
+  }, [isInView, url, onLoad, isModal]);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    setHasError(false);
+    setRetryCount(0);
     onLoad?.();
   }, [onLoad]);
 
+  const handleError = useCallback(() => {
+    if (retryCount < PREVIEW_CONFIG.retryAttempts) {
+      // Retry loading
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        if (iframeRef.current) {
+          iframeRef.current.src = url;
+        }
+      }, PREVIEW_CONFIG.retryDelay);
+    } else {
+      setHasError(true);
+      setIsLoaded(false);
+      onError?.();
+    }
+  }, [retryCount, url, onError]);
+
+  const refreshIframe = useCallback(() => {
+    if (iframeRef.current) {
+      setIsLoaded(false);
+      setHasError(false);
+      setRetryCount(0);
+      iframeRef.current.src = url;
+    }
+  }, [url]);
+
   return (
-    <div ref={imgRef} className={`relative overflow-hidden ${className || ''}`} {...props}>
+    <div ref={containerRef} className={`relative w-full h-full overflow-hidden ${className || ''}`}>
       {isInView && (
         <>
-          <img
-            src={src}
-            alt={alt}
-            className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className || ''}`}
+          <iframe
+            ref={iframeRef}
+            className={`w-full h-full border-0 transition-opacity duration-700 ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            } ${hasError ? 'hidden' : 'block'}`}
             onLoad={handleLoad}
+            onError={handleError}
+            sandbox="allow-same-origin allow-scripts allow-forms allow-links"
             loading="lazy"
+            title={`${title} - Live Preview`}
+            style={{
+              transform: isModal ? 'none' : `scale(${PREVIEW_CONFIG.previewScale})`,
+              transformOrigin: 'top left',
+              width: isModal ? '100%' : `${100 / PREVIEW_CONFIG.previewScale}%`,
+              height: isModal ? '100%' : `${100 / PREVIEW_CONFIG.previewScale}%`,
+              pointerEvents: isModal ? 'auto' : 'none'
+            }}
           />
-          {!isLoaded && (
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
         </>
       )}
-      {!isInView && (
-        <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+      
+      {/* Loading state */}
+      {(!isLoaded && !hasError) && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              {isCached ? 'Loading from cache...' : 'Loading live preview...'}
+            </p>
+            {retryCount > 0 && (
+              <p className="text-xs text-gray-400 mt-1">Retry {retryCount}/{PREVIEW_CONFIG.retryAttempts}</p>
+            )}
+          </div>
+        </div>
       )}
+      
+      {/* Error fallback */}
+      {hasError && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+          <div className="text-center text-gray-500 dark:text-gray-400 p-4">
+            <Monitor className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <div className="text-sm font-medium mb-1">{title}</div>
+            <div className="text-xs opacity-75">Preview unavailable</div>
+            <div className="text-xs opacity-50 mt-1">Click to view live site</div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshIframe}
+              className="mt-2 text-xs"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Overlay to prevent interaction in card view */}
+      {!isModal && <div className="absolute inset-0 bg-transparent cursor-pointer z-10" />}
     </div>
   );
 });
 
-LazyImage.displayName = 'LazyImage';
-
-// Iframe cache to store loaded iframes and avoid reloading
-const iframeCache = new Map();
+PreviewIframe.displayName = 'PreviewIframe';
 
 export const Card = React.memo(({
   card,
@@ -83,55 +413,51 @@ export const Card = React.memo(({
   const [showIframe, setShowIframe] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
-  const [iframeCached, setIframeCached] = useState(false);
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
   const isMobile = useIsMobile();
 
+  // Check if live preview should be shown (only when URL is available)
+  const shouldShowPreview = useMemo(() => {
+    return card.liveUrl && PREVIEW_CONFIG.enablePreview && (!isMobile || PREVIEW_CONFIG.mobilePreview);
+  }, [card.liveUrl, isMobile]);
+
   // Memoize the card preview to prevent unnecessary re-renders
   const cardPreview = useMemo(() => (
     <div 
-      className={`rounded-2xl transition-all duration-700 ease-out hover:scale-105 p-1 sm:p-2 aspect-[4/3] overflow-hidden`}
+      className={`rounded-2xl transition-all duration-700 ease-out hover:scale-105 p-1 sm:p-2 aspect-[4/3] overflow-hidden relative group`}
       style={{
         borderRadius: '24px 24px 4px 24px'
       }}
     >
       <div className="bg-white dark:bg-gray-800 h-full shadow-lg relative overflow-hidden" style={{ borderRadius: '16px 16px 2px 16px' }}>
-        {card.heroImage ? (
-          <LazyImage 
-            src={card.heroImage} 
-            alt={card.title}
-            className="w-full h-full object-cover"
-            placeholder={
-              <div className="w-full h-full bg-white/5 dark:bg-gray-700 flex items-center justify-center">
-                <div className="text-center text-gray-500 dark:text-gray-400 p-4">
-                  <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
-                  <div className="text-xs sm:text-sm">Loading image...</div>
-                </div>
-              </div>
-            }
+        {shouldShowPreview ? (
+          <PreviewIframe
+            url={card.liveUrl}
+            title={card.title}
+            className="w-full h-full"
+            onLoad={() => {}}
+            onError={() => {}}
           />
         ) : (
-          <div className="w-full h-full bg-white/5 dark:bg-gray-700 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
             <div className="text-center text-gray-500 dark:text-gray-400 p-4">
+              <Monitor className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
-              <div className="text-xs sm:text-sm">Hero image will appear here</div>
+              <div className="text-xs sm:text-sm">
+                {card.liveUrl ? "Live preview will load here" : "No live URL available"}
+              </div>
             </div>
           </div>
         )}
       </div>
     </div>
-  ), [card.heroImage, card.title]);
+  ), [card.title, card.liveUrl, shouldShowPreview]);
 
   useEffect(() => {
     function onKeyDown(event) {
       if (event.key === "Escape" && showIframe) {
         handleCloseIframe();
-      }
-      // Refresh iframe with Cmd/Ctrl + R
-      if ((event.metaKey || event.ctrlKey) && event.key === 'r' && showIframe) {
-        event.preventDefault();
-        handleRefreshIframe();
       }
     }
 
@@ -154,25 +480,8 @@ export const Card = React.memo(({
   const handleOpen = () => {
     if (card.liveUrl) {
       setShowIframe(true);
-      
-      // Check if iframe is cached
-      const cacheKey = `iframe-${card.id || card.title}`;
-      if (iframeCache.has(cacheKey)) {
-        const cachedData = iframeCache.get(cacheKey);
-        setIframeLoaded(true);
-        setIframeCached(true);
-        setIframeError(false);
-        
-        // Update cache access time
-        iframeCache.set(cacheKey, {
-          ...cachedData,
-          lastAccessed: Date.now()
-        });
-      } else {
-        setIframeLoaded(false);
-        setIframeCached(false);
-        setIframeError(false);
-      }
+      setIframeLoaded(false);
+      setIframeError(false);
     }
     if (onClick) onClick(card);
   };
@@ -186,79 +495,6 @@ export const Card = React.memo(({
   const handleIframeLoad = () => {
     setIframeLoaded(true);
     setIframeError(false);
-    
-    // Cache the iframe for this specific card
-    const cacheKey = `iframe-${card.id || card.title}`;
-    if (!iframeCache.has(cacheKey)) {
-      iframeCache.set(cacheKey, {
-        url: card.liveUrl,
-        loadedAt: Date.now(),
-        title: card.title,
-        status: 'loaded'
-      });
-      setIframeCached(true);
-    }
-    
-    // Pre-cache other websites in the background for faster future loading
-    setTimeout(() => {
-      preloadOtherWebsites();
-    }, 2000); // Wait 2 seconds after current iframe loads
-  };
-
-  // Function to preload other websites in invisible iframes for caching
-  const preloadOtherWebsites = () => {
-    // Get other projects from the parent component context if available
-    // For now, we'll use the default projects list
-    const allProjects = [
-      { id: 1, title: "ZENPOINT WELLNESS", liveUrl: "https://zenpoint-wellness.com" },
-      { id: 2, title: "TIMBER ELEGANCE", liveUrl: "https://timber-elegance.com" },
-      { id: 3, title: "DIGITAL AGENCY PRO", liveUrl: "https://digital-agency-pro.com" },
-      { id: 4, title: "MOBILE FINTECH", liveUrl: "https://mobile-fintech-app.com" }
-    ];
-
-    allProjects.forEach(project => {
-      const cacheKey = `iframe-${project.id || project.title}`;
-      
-      // Skip if already cached or is current project
-      if (iframeCache.has(cacheKey) || project.id === card.id) return;
-      
-      // Create invisible iframe for preloading
-      const preloadIframe = document.createElement('iframe');
-      preloadIframe.src = project.liveUrl;
-      preloadIframe.style.position = 'absolute';
-      preloadIframe.style.left = '-9999px';
-      preloadIframe.style.width = '1px';
-      preloadIframe.style.height = '1px';
-      preloadIframe.style.opacity = '0';
-      preloadIframe.style.pointerEvents = 'none';
-      
-      preloadIframe.onload = () => {
-        // Cache the preloaded website
-        iframeCache.set(cacheKey, {
-          url: project.liveUrl,
-          loadedAt: Date.now(),
-          title: project.title,
-          status: 'preloaded'
-        });
-        
-        // Remove the preload iframe after a short delay
-        setTimeout(() => {
-          if (preloadIframe.parentNode) {
-            preloadIframe.parentNode.removeChild(preloadIframe);
-          }
-        }, 1000);
-      };
-      
-      preloadIframe.onerror = () => {
-        // Remove failed preload iframe
-        if (preloadIframe.parentNode) {
-          preloadIframe.parentNode.removeChild(preloadIframe);
-        }
-      };
-      
-      // Add to document body for preloading
-      document.body.appendChild(preloadIframe);
-    });
   };
 
   const handleIframeError = () => {
@@ -269,17 +505,15 @@ export const Card = React.memo(({
   const handleRefreshIframe = () => {
     setIframeLoaded(false);
     setIframeError(false);
-    setIframeCached(false);
     
-    // Clear cache for this iframe
-    const cacheKey = `iframe-${card.id || card.title}`;
-    iframeCache.delete(cacheKey);
-    
-    // Force iframe refresh by updating src with timestamp
+    // Force refresh by adding a timestamp to the URL
     if (iframeRef.current) {
-      const url = new URL(card.liveUrl);
-      url.searchParams.set('_refresh', Date.now().toString());
-      iframeRef.current.src = url.toString();
+      const iframe = iframeRef.current.querySelector('iframe');
+      if (iframe) {
+        const url = new URL(card.liveUrl);
+        url.searchParams.set('_refresh', Date.now().toString());
+        iframe.src = url.toString();
+      }
     }
   };
 
@@ -322,9 +556,6 @@ export const Card = React.memo(({
                     <h3 className="font-medium text-gray-900 dark:text-white text-xs truncate max-w-[200px]">
                       {card.title}
                     </h3>
-                    {iframeCached && (
-                      <span className="text-xs text-green-500 dark:text-green-400">⚡</span>
-                    )}
                   </div>
                 </div>
                 
@@ -335,91 +566,34 @@ export const Card = React.memo(({
                     className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
                     title="Refresh (Cmd/Ctrl + R)"
                   >
-                    <span className="text-gray-700 dark:text-gray-200 text-xs">↻</span>
+                    <RefreshCw className="w-3 h-3 text-gray-700 dark:text-gray-200" />
                   </button>
                   <button
                     onClick={() => window.open(card.liveUrl, '_blank')}
                     className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
                     title="Open in New Tab"
                   >
-                    <span className="text-gray-700 dark:text-gray-200 text-xs">↗</span>
+                    <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-200" />
                   </button>
                   <button
                     onClick={handleCloseIframe}
                     className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-red-500/20 dark:bg-black/10 dark:hover:bg-red-500/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
                     title="Close (Esc)"
                   >
-                    <span className="text-gray-700 dark:text-gray-200 hover:text-red-500 text-xs">✕</span>
+                    <X className="w-3 h-3 text-gray-700 dark:text-gray-200 hover:text-red-500" />
                   </button>
                 </div>
               </div>
 
-              {/* Iframe Container with transparent background */}
-              <div className="flex-1 relative bg-transparent">
-                {(!iframeLoaded && !iframeError) && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 flex items-center justify-center bg-white/10 dark:bg-black/10 backdrop-blur-lg"
-                  >
-                    <div className="text-center">
-                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                      <p className="text-gray-800 dark:text-gray-200 text-sm font-medium">
-                        {iframeCached ? 'Loading from cache...' : 'Loading website...'}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                        {iframeCached ? 'This should be instant ⚡' : 'This may take a few seconds'}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {iframeError && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute inset-0 flex items-center justify-center bg-white/10 dark:bg-black/10 backdrop-blur-lg"
-                  >
-                    <div className="text-center max-w-sm mx-auto p-6">
-                      <div className="w-12 h-12 bg-red-500/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
-                        <span className="text-red-600 dark:text-red-400 text-lg">⚠</span>
-                      </div>
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
-                        Cannot display website
-                      </h3>
-                      <p className="text-gray-700 dark:text-gray-200 text-xs mb-4">
-                        This website doesn't allow embedding.
-                      </p>
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          onClick={() => window.open(card.liveUrl, '_blank')}
-                          className="px-3 py-1.5 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm text-white rounded-md transition-colors text-xs"
-                        >
-                          Open in New Tab
-                        </button>
-                        <button
-                          onClick={handleCloseIframe}
-                          className="px-3 py-1.5 bg-white/20 hover:bg-white/30 dark:bg-black/20 dark:hover:bg-black/30 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-md transition-colors text-xs"
-                        >
-                          Close
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                <iframe
-                  ref={iframeRef}
-                  src={card.liveUrl}
-                  className={`w-full h-full border-0 bg-transparent transition-opacity duration-500 ${
-                    iframeLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
+              {/* Enhanced iframe container using PreviewIframe component */}
+              <div className="flex-1 relative bg-transparent" ref={iframeRef}>
+                <PreviewIframe
+                  url={card.liveUrl}
+                  title={card.title}
+                  className="w-full h-full"
+                  isModal={true}
                   onLoad={handleIframeLoad}
                   onError={handleIframeError}
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-links allow-popups allow-popups-to-escape-sandbox"
-                  loading="lazy"
-                  title={`${card.title} - Live Website`}
                 />
               </div>
             </motion.div>
