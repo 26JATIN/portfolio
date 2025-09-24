@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static optimization
-  output: 'standalone',
-  
   // Compress images automatically
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -16,7 +13,6 @@ const nextConfig = {
   
   // Optimize for performance
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['framer-motion', 'lucide-react'],
   },
   
