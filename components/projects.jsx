@@ -21,6 +21,7 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
   const [hasError, setHasError] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState(card.screenshotUrl || null);
   const [imageKey, setImageKey] = useState(Date.now()); // Force re-render of images
+  const [iframeLoading, setIframeLoading] = useState(true); // New state for iframe loading
   const imgRef = useRef(null);
 
   // Update screenshot URL when card prop changes (e.g., after cleanup/refresh)
@@ -31,7 +32,11 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
       setIsLoaded(false);
       setHasError(false);
     }
-  }, [card.screenshotUrl, card._id, card.updatedAt]); // Also trigger on updatedAt change
+    // Reset iframe loading state when card changes
+    if (isModal) {
+      setIframeLoading(true);
+    }
+  }, [card.screenshotUrl, card._id, card.updatedAt, isModal]); // Also trigger on updatedAt change
 
   // Screenshot generation is now handled only through admin panel
   // No automatic generation on frontend
@@ -53,14 +58,41 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
 
   // For modal view, still use iframe for interactivity
   if (isModal && card.liveUrl) {
+    const handleIframeLoad = () => {
+      setIframeLoading(false);
+      onLoad?.();
+    };
+
+    const handleIframeError = () => {
+      setIframeLoading(false);
+      onError?.();
+    };
+
     return (
       <div className={`relative w-full h-full overflow-hidden ${className || ''}`}>
+        {/* Loading Spinner Overlay */}
+        {iframeLoading && (
+          <div className="absolute inset-0 bg-gray-50 dark:bg-gray-900 flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                Loading {card.title}...
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                Please wait while the website loads
+              </p>
+            </div>
+          </div>
+        )}
+        
         <iframe
           className="w-full h-full border-0 bg-white"
           src={card.liveUrl}
           title={`${card.title} - Live Preview`}
           sandbox="allow-same-origin allow-scripts allow-forms allow-links"
           loading="lazy"
+          onLoad={handleIframeLoad}
+          onError={handleIframeError}
         />
       </div>
     );
