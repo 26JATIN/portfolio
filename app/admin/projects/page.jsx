@@ -566,35 +566,38 @@ export default function AdminProjects() {
 
         {/* Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-80 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-black rounded-xl max-w-4xl w-full max-h-[90vh] shadow-2xl border dark:border-gray-800 flex flex-col">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-zinc-950 border border-zinc-800/50 rounded-2xl max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-zinc-800/50 flex-shrink-0 bg-zinc-950/95 backdrop-blur-sm sticky top-0 z-10">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-bold text-white">
                     {editingProject ? 'Edit Project' : 'New Project'}
                   </h2>
-                  <Button variant="ghost" onClick={closeModal} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <button 
+                    onClick={closeModal} 
+                    className="p-2 hover:bg-zinc-800 rounded-xl transition-colors text-zinc-400 hover:text-white"
+                  >
                     <X size={20} />
-                  </Button>
+                  </button>
                 </div>
               </div>
 
               <div 
                 ref={modalScrollRef}
-                className="flex-1 overflow-hidden"
+                className="flex-1 overflow-hidden scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-700"
                 style={{ height: 'calc(90vh - 80px)' }}
               >
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                   {/* Project Name */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
                       Project Name *
                     </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-zinc-700 bg-zinc-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-zinc-400 transition-all"
                       placeholder="Enter project name"
                       required
                     />
@@ -602,35 +605,35 @@ export default function AdminProjects() {
 
                   {/* Live URL */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
                       Live URL
                     </label>
                     <input
                       type="url"
                       value={formData.liveUrl}
                       onChange={(e) => setFormData(prev => ({ ...prev, liveUrl: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-zinc-700 bg-zinc-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-zinc-400 transition-all"
                       placeholder="https://example.com"
                     />
                   </div>
 
                   {/* GitHub URL */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
                       GitHub URL
                     </label>
                     <input
                       type="url"
                       value={formData.githubUrl}
                       onChange={(e) => setFormData(prev => ({ ...prev, githubUrl: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-zinc-700 bg-zinc-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-zinc-400 transition-all"
                       placeholder="https://github.com/username/repo"
                     />
                   </div>
 
                   {/* Tags */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
                       Tags
                     </label>
                     <div className="space-y-3">
@@ -640,10 +643,10 @@ export default function AdminProjects() {
                           value={newTag}
                           onChange={(e) => setNewTag(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
+                          className="flex-1 px-4 py-3 border border-zinc-700 bg-zinc-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-zinc-400 transition-all"
                           placeholder="Add a tag"
                         />
-                        <Button type="button" onClick={addTag} className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">Add</Button>
+                        <Button type="button" onClick={addTag} className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl text-white font-medium transition-all">Add</Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {formData.tags.map((tag, index) => (

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
+import Lenis from 'lenis'
 
 export default function AdminExperiencePage() {
   const [experiences, setExperiences] = useState([])
@@ -23,6 +24,9 @@ export default function AdminExperiencePage() {
     orderIndex: 0,
     isPublished: false
   })
+
+  const modalScrollRef = useRef(null)
+  const lenisRef = useRef(null)
 
   // Predefined color schemes
   const colorSchemes = [
@@ -67,6 +71,44 @@ export default function AdminExperiencePage() {
   useEffect(() => {
     fetchExperiences()
   }, [])
+
+  // Initialize Lenis for modal when it opens
+  useEffect(() => {
+    if (showForm && modalScrollRef.current) {
+      // Create new Lenis instance for the modal
+      lenisRef.current = new Lenis({
+        wrapper: modalScrollRef.current,
+        content: modalScrollRef.current.firstChild,
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        direction: 'vertical',
+        gestureDirection: 'vertical',
+        smooth: true,
+        mouseMultiplier: 1,
+        smoothTouch: true,
+        touchMultiplier: 2,
+        infinite: false,
+      })
+
+      // Animation frame for Lenis
+      function raf(time) {
+        lenisRef.current?.raf(time)
+        requestAnimationFrame(raf)
+      }
+      requestAnimationFrame(raf)
+
+      return () => {
+        if (lenisRef.current) {
+          lenisRef.current.destroy()
+          lenisRef.current = null
+        }
+      }
+    } else if (!showForm && lenisRef.current) {
+      // Destroy Lenis instance when closing modal
+      lenisRef.current.destroy()
+      lenisRef.current = null
+    }
+  }, [showForm])
 
   const fetchExperiences = async () => {
     try {
@@ -346,12 +388,29 @@ export default function AdminExperiencePage() {
 
       {/* Experience Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold">
-                {editingExperience ? 'Edit Experience' : 'Add New Experience'}
-              </h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div 
+            ref={modalScrollRef}
+            className="bg-zinc-950 border border-zinc-800/50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-700"
+          >
+            <div className="p-6 border-b border-zinc-800/50 sticky top-0 bg-zinc-950/95 backdrop-blur-sm z-10">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">
+                  {editingExperience ? 'Edit Experience' : 'Add New Experience'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowForm(false)
+                    setEditingExperience(null)
+                    resetForm()
+                  }}
+                  className="p-2 hover:bg-zinc-800 rounded-xl transition-colors text-zinc-400 hover:text-white"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -359,72 +418,73 @@ export default function AdminExperiencePage() {
                 {/* Basic Information */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Company *</label>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">Company *</label>
                     <input
                       type="text"
                       required
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       placeholder="e.g. Google"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Role *</label>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">Role *</label>
                     <input
                       type="text"
                       required
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       placeholder="e.g. Senior Frontend Developer"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Period *</label>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">Period *</label>
                     <input
                       type="text"
                       required
                       value={formData.period}
                       onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       placeholder="e.g. 2020-2023"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Logo Letter</label>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">Logo Letter</label>
                     <input
                       type="text"
                       value={formData.logo}
                       onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       placeholder="e.g. G"
                       maxLength="2"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Order Index</label>
+                    <label className="block text-sm font-medium mb-2 text-zinc-300">Order Index</label>
                     <input
                       type="number"
                       value={formData.orderIndex}
                       onChange={(e) => setFormData({ ...formData, orderIndex: parseInt(e.target.value) || 0 })}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                       min="0"
                     />
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <input
                       type="checkbox"
                       id="isPublished"
                       checked={formData.isPublished}
                       onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                      className="w-4 h-4 text-blue-600 bg-zinc-900 border-zinc-700 rounded focus:ring-blue-500 focus:ring-2"
                     />
-                    <label htmlFor="isPublished" className="text-sm font-medium">
+                    <label htmlFor="isPublished" className="text-sm font-medium text-zinc-300">
                       Publish immediately
                     </label>
                   </div>
