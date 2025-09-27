@@ -126,7 +126,7 @@ export function ContactSection() {
           </div>
           
           <div className="flex items-center gap-6">
-            <span className="text-muted-foreground text-sm">©2024 All rights reserved</span>
+            <span className="text-muted-foreground text-sm">©2025 All rights reserved</span>
             <Button
               variant="outline"
               className="rounded-full px-6 py-2 border-2 hover:bg-foreground hover:text-background transition-all duration-300 hover:scale-105"
