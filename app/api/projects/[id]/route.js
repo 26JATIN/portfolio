@@ -98,7 +98,7 @@ export async function GET(request, { params }) {
 // PUT - Update project
 export async function PUT(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     const updateData = await request.json()
     
     // Get current project to check if liveUrl changed and for cleanup
@@ -183,7 +183,7 @@ export async function PUT(request, { params }) {
 // DELETE - Delete project and cleanup screenshots
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     
     // Get project first to access screenshot info for cleanup
     const projectResult = await Project.getById(id)

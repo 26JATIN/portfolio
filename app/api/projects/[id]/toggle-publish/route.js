@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 // POST - Toggle publish status
 export async function POST(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     const result = await Project.togglePublish(id)
     
     if (result.success) {

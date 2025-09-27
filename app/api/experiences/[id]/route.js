@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 // GET - Fetch experience by ID
 export async function GET(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     const result = await Experience.getById(id)
     
     if (result.success) {
@@ -37,7 +37,7 @@ export async function GET(request, { params }) {
 // PUT - Update experience
 export async function PUT(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     const updateData = await request.json()
     
     const result = await Experience.update(id, updateData)
@@ -65,7 +65,7 @@ export async function PUT(request, { params }) {
 // DELETE - Delete experience
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params
+    const { id } = await params
     const result = await Experience.delete(id)
     
     if (result.success) {

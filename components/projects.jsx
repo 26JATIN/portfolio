@@ -163,6 +163,7 @@ export const Card = React.memo(({
   const [showIframe, setShowIframe] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
+  const [activeTab, setActiveTab] = useState('live'); // 'live' or 'github'
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
 
@@ -202,6 +203,14 @@ export const Card = React.memo(({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [showIframe]);
 
+  // Reset iframe state when active tab changes
+  useEffect(() => {
+    if (showIframe) {
+      setIframeLoaded(false);
+      setIframeError(false);
+    }
+  }, [activeTab, showIframe]);
+
   useOutsideClick(containerRef, () => {
     if (showIframe) {
       handleCloseIframe();
@@ -213,6 +222,7 @@ export const Card = React.memo(({
       setShowIframe(true);
       setIframeLoaded(false);
       setIframeError(false);
+      setActiveTab('live'); // Always start with live tab
     }
     if (onClick) onClick(card);
   };
@@ -221,6 +231,7 @@ export const Card = React.memo(({
     setShowIframe(false);
     setIframeLoaded(false);
     setIframeError(false);
+    setActiveTab('live'); // Reset to live tab
   };
 
   const handleIframeLoad = () => {
@@ -241,9 +252,17 @@ export const Card = React.memo(({
     if (iframeRef.current) {
       const iframe = iframeRef.current.querySelector('iframe');
       if (iframe) {
-        const url = new URL(card.liveUrl);
-        url.searchParams.set('_refresh', Date.now().toString());
-        iframe.src = url.toString();
+        const currentUrl = activeTab === 'live' ? card.liveUrl : card.githubUrl;
+        if (currentUrl) {
+          try {
+            const url = new URL(currentUrl);
+            url.searchParams.set('_refresh', Date.now().toString());
+            iframe.src = url.toString();
+          } catch {
+            // If URL parsing fails, just reload with timestamp
+            iframe.src = `${currentUrl}?_refresh=${Date.now()}`;
+          }
+        }
       }
     }
   };
@@ -274,57 +293,117 @@ export const Card = React.memo(({
                 damping: 30
               }}
             >
-              {/* Minimal Header with transparent blur */}
-              <div className="flex-shrink-0 flex items-center justify-between p-2 border-b border-white/5 bg-white/5 dark:bg-black/5 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  <motion.div 
-                    className="w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-sm"
-                    initial={{ rotate: 0 }}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                  ></motion.div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-gray-900 dark:text-white text-xs truncate max-w-[200px]">
-                      {card.title}
-                    </h3>
+              {/* Header with tabs */}
+              <div className="flex-shrink-0 border-b border-white/5 bg-white/5 dark:bg-black/5 backdrop-blur-sm">
+                {/* Top row with title and close */}
+                <div className="flex items-center justify-between p-2">
+                  <div className="flex items-center gap-3">
+                    <motion.div 
+                      className="w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-sm"
+                      initial={{ rotate: 0 }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                    ></motion.div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-900 dark:text-white text-xs truncate max-w-[200px]">
+                        {card.title}
+                      </h3>
+                    </div>
+                  </div>
+                  
+                  {/* Controls */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={handleRefreshIframe}
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+                      title="Refresh (Cmd/Ctrl + R)"
+                    >
+                      <RefreshCw className="w-3 h-3 text-gray-700 dark:text-gray-200" />
+                    </button>
+                    <button
+                      onClick={() => window.open(activeTab === 'live' ? card.liveUrl : card.githubUrl, '_blank')}
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+                      title="Open in New Tab"
+                    >
+                      <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-200" />
+                    </button>
+                    <button
+                      onClick={handleCloseIframe}
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-red-500/20 dark:bg-black/10 dark:hover:bg-red-500/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
+                      title="Close (Esc)"
+                    >
+                      <X className="w-3 h-3 text-gray-700 dark:text-gray-200 hover:text-red-500" />
+                    </button>
                   </div>
                 </div>
                 
-                {/* Minimal Controls */}
-                <div className="flex items-center gap-1">
+                {/* Tabs row - always show tabs */}
+                <div className="flex border-t border-white/5">
                   <button
-                    onClick={handleRefreshIframe}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-                    title="Refresh (Cmd/Ctrl + R)"
+                    onClick={() => setActiveTab('live')}
+                    className={`flex-1 px-4 py-2 text-xs font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      activeTab === 'live'
+                        ? 'bg-white/10 text-blue-400 border-b-2 border-blue-400'
+                        : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
+                    }`}
                   >
-                    <RefreshCw className="w-3 h-3 text-gray-700 dark:text-gray-200" />
+                    <Monitor className="w-3 h-3" />
+                    Live Site
                   </button>
                   <button
-                    onClick={() => window.open(card.liveUrl, '_blank')}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-                    title="Open in New Tab"
+                    onClick={() => card.githubUrl && setActiveTab('github')}
+                    disabled={!card.githubUrl}
+                    className={`flex-1 px-4 py-2 text-xs font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      activeTab === 'github'
+                        ? 'bg-white/10 text-blue-400 border-b-2 border-blue-400'
+                        : card.githubUrl 
+                          ? 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
+                          : 'text-gray-600 cursor-not-allowed opacity-50'
+                    }`}
+                    title={!card.githubUrl ? 'GitHub URL not available' : 'View GitHub Repository'}
                   >
-                    <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-200" />
-                  </button>
-                  <button
-                    onClick={handleCloseIframe}
-                    className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 hover:bg-red-500/20 dark:bg-black/10 dark:hover:bg-red-500/20 backdrop-blur-sm transition-all duration-200 hover:scale-110"
-                    title="Close (Esc)"
-                  >
-                    <X className="w-3 h-3 text-gray-700 dark:text-gray-200 hover:text-red-500" />
+                    <Github className="w-3 h-3" />
+                    GitHub
                   </button>
                 </div>
               </div>
 
-              {/* Enhanced preview container using ProjectPreview component */}
+              {/* Tabbed content container */}
               <div className="flex-1 relative bg-transparent" ref={iframeRef}>
-                <ProjectPreview
-                  card={card}
-                  className="w-full h-full"
-                  isModal={true}
-                  onLoad={handleIframeLoad}
-                  onError={handleIframeError}
-                />
+                {activeTab === 'live' && card.liveUrl ? (
+                  <ProjectPreview
+                    card={card}
+                    className="w-full h-full"
+                    isModal={true}
+                    onLoad={handleIframeLoad}
+                    onError={handleIframeError}
+                  />
+                ) : activeTab === 'github' && card.githubUrl ? (
+                  <iframe
+                    className="w-full h-full border-0 bg-white"
+                    src={card.githubUrl}
+                    title={`${card.title} - GitHub Repository`}
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-links"
+                    loading="lazy"
+                    onLoad={handleIframeLoad}
+                    onError={handleIframeError}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <div className="text-center">
+                      <div className="text-gray-400 dark:text-gray-500 mb-2">
+                        {activeTab === 'live' ? (
+                          <Monitor size={48} />
+                        ) : (
+                          <Github size={48} />
+                        )}
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {activeTab === 'live' ? 'No live URL available' : 'No GitHub URL available'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -348,7 +427,9 @@ export const Card = React.memo(({
               >
                 {card.title}
               </motion.h3>
-              <span className="text-muted-foreground text-sm sm:text-base font-medium flex-shrink-0">{card.year}</span>
+              <span className="text-muted-foreground text-sm sm:text-base font-medium flex-shrink-0">
+                {card.year || new Date(card.createdAt || Date.now()).getFullYear()}
+              </span>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -430,7 +511,7 @@ export function SelectedWorkSection() {
                   {project.title}
                 </h4>
                 <p className="text-sm text-gray-600 line-clamp-3">
-                  {project.projectOverview || project.category}
+                  {project.projectOverview || project.category || 'No description available.'}
                 </p>
                 <div className="flex gap-2 mt-4">
                   <button 
@@ -550,6 +631,7 @@ export function SelectedWorkSection() {
       description: "A mindfulness and wellness platform focusing on inner peace and mental clarity.",
       type: "wellness",
       liveUrl: "https://zenpoint-wellness.com",
+      githubUrl: "https://github.com/example/zenpoint-wellness",
       techStack: ["React", "Next.js", "Tailwind CSS", "Framer Motion", "Node.js", "MongoDB"],
       preview: (
         <>
@@ -652,6 +734,7 @@ export function SelectedWorkSection() {
       description: "Premium furniture e-commerce platform with sustainable design focus.",
       type: "ecommerce",
       liveUrl: "https://timber-elegance.com",
+      githubUrl: "https://github.com/example/timber-elegance",
       techStack: ["Next.js", "TypeScript", "Shopify", "Three.js", "Stripe", "Sanity CMS"],
       preview: (
         <>
