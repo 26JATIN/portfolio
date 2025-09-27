@@ -10,399 +10,117 @@ import React, {
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/use-outside-click";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { X, ExternalLink, Github, RefreshCw, Monitor } from "lucide-react";
 import Lenis from '@studio-freight/lenis'
 
-// Enhanced configuration for optimal performance
-const PREVIEW_CONFIG = {
-  enablePreview: true,
-  mobilePreview: true, // Keep disabled on mobile for performance
-  previewScale: 0.6,
-  lazyLoadThreshold: 0.2,
-  lazyLoadRootMargin: '200px',
-  maxConcurrentPreviews: 3, // Limit concurrent iframes to prevent crashes
-  maxCacheSize: 6, // Maximum cached iframes
-  cacheTimeout: 5 * 60 * 1000, // 5 minutes cache timeout
-  previewDelay: 500, // Delay before loading preview
-  retryAttempts: 2,
-  retryDelay: 1000,
-};
-
-// Enhanced iframe cache with intelligent management
-class IframeManager {
-  constructor() {
-    this.cache = new Map();
-    this.activeIframes = new Set();
-    this.loadQueue = [];
-    this.isProcessingQueue = false;
-    this.observer = null;
-    
-    // Only setup observer on client side
-    if (typeof window !== 'undefined') {
-      this.setupIntersectionObserver();
-    }
-  }
-
-  setupIntersectionObserver() {
-    // Check if IntersectionObserver is available
-    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
-      this.observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            const url = entry.target.dataset.url;
-            if (entry.isIntersecting) {
-              this.queueLoad(url, entry.target);
-            } else {
-              this.handleIntersectionExit(url, entry.target);
-            }
-          });
-        },
-        {
-          threshold: PREVIEW_CONFIG.lazyLoadThreshold,
-          rootMargin: PREVIEW_CONFIG.lazyLoadRootMargin,
-        }
-      );
-    }
-  }
-
-  queueLoad(url, element) {
-    if (!this.cache.has(url) && !this.loadQueue.find(item => item.url === url)) {
-      this.loadQueue.push({ url, element, timestamp: Date.now() });
-      this.processQueue();
-    }
-  }
-
-  async processQueue() {
-    if (this.isProcessingQueue || this.loadQueue.length === 0) return;
-    
-    this.isProcessingQueue = true;
-    
-    while (this.loadQueue.length > 0 && this.activeIframes.size < PREVIEW_CONFIG.maxConcurrentPreviews) {
-      const item = this.loadQueue.shift();
-      await this.loadIframe(item);
-      // Small delay between loads to prevent overwhelming the browser
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    
-    this.isProcessingQueue = false;
-  }
-
-  async loadIframe({ url, element }) {
-    // Only proceed on client side
-    if (typeof window === 'undefined' || this.activeIframes.has(url)) return;
-
-    try {
-      this.activeIframes.add(url);
-      
-      // Create iframe element
-      const iframe = document.createElement('iframe');
-      iframe.src = url;
-      iframe.style.cssText = `
-        width: 100%;
-        height: 100%;
-        border: none;
-        transform: scale(${PREVIEW_CONFIG.previewScale});
-        transform-origin: top left;
-        width: ${100 / PREVIEW_CONFIG.previewScale}%;
-        height: ${100 / PREVIEW_CONFIG.previewScale}%;
-        pointer-events: none;
-      `;
-      iframe.sandbox = "allow-same-origin allow-scripts allow-forms allow-links";
-      iframe.loading = "lazy";
-
-      const loadPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Iframe load timeout'));
-        }, 10000);
-
-        iframe.onload = () => {
-          clearTimeout(timeout);
-          resolve(iframe);
-        };
-
-        iframe.onerror = () => {
-          clearTimeout(timeout);
-          reject(new Error('Iframe load error'));
-        };
-      });
-
-      const loadedIframe = await loadPromise;
-      
-      // Cache the successfully loaded iframe
-      this.cache.set(url, {
-        iframe: loadedIframe.cloneNode(true),
-        timestamp: Date.now(),
-        accessCount: 1,
-      });
-
-      // Clean up old cache entries
-      this.cleanupCache();
-
-    } catch (error) {
-      console.warn(`Failed to load iframe for ${url}:`, error);
-    } finally {
-      this.activeIframes.delete(url);
-      this.processQueue(); // Continue processing queue
-    }
-  }
-
-  handleIntersectionExit(url, element) {
-    // Optional: Handle when iframe goes out of view
-    // We keep it loaded for performance unless cache is full
-  }
-
-  getCachedIframe(url) {
-    if (this.cache.has(url)) {
-      const cached = this.cache.get(url);
-      // Update access info
-      cached.accessCount++;
-      cached.timestamp = Date.now();
-      return cached.iframe.cloneNode(true);
-    }
-    return null;
-  }
-
-  cleanupCache() {
-    if (this.cache.size <= PREVIEW_CONFIG.maxCacheSize) return;
-
-    // Remove oldest entries
-    const entries = Array.from(this.cache.entries());
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-    
-    const toRemove = entries.slice(0, entries.length - PREVIEW_CONFIG.maxCacheSize);
-    toRemove.forEach(([url]) => {
-      this.cache.delete(url);
-    });
-  }
-
-  observe(element, url) {
-    if (this.observer && element) {
-      element.dataset.url = url;
-      this.observer.observe(element);
-    }
-  }
-
-  unobserve(element) {
-    if (this.observer && element) {
-      this.observer.unobserve(element);
-    }
-  }
-
-  destroy() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-    this.cache.clear();
-    this.activeIframes.clear();
-    this.loadQueue = [];
-  }
-}
-
-// Global iframe manager instance - initialized on client side only
-let iframeManager = null;
-
-// Initialize iframe manager on client side
-if (typeof window !== 'undefined') {
-  iframeManager = new IframeManager();
-}
-
-// Enhanced Preview iframe component with intelligent caching
-const PreviewIframe = React.memo(({ url, title, className, onLoad, onError, isModal = false }) => {
+// Enhanced Preview component with screenshot optimization
+const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal = false }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const iframeRef = useRef(null);
-  const containerRef = useRef(null);
-  const loadTimeoutRef = useRef(null);
+  const [screenshotUrl, setScreenshotUrl] = useState(card.screenshotUrl || null);
+  const [imageKey, setImageKey] = useState(Date.now()); // Force re-render of images
+  const imgRef = useRef(null);
 
-  // Check if iframe is cached
-  const [isCached, setIsCached] = useState(() => {
-    return iframeManager ? iframeManager.getCachedIframe(url) !== null : false;
-  });
-
-  // Intersection observer for lazy loading (only for cards, not modal)
+  // Update screenshot URL when card prop changes (e.g., after cleanup/refresh)
   useEffect(() => {
-    if (isModal) {
-      setIsInView(true);
-      return;
+    setScreenshotUrl(card.screenshotUrl || null);
+    setImageKey(Date.now() + Math.random()); // Generate unique cache-busting key
+    if (!card.screenshotUrl) {
+      setIsLoaded(false);
+      setHasError(false);
     }
+  }, [card.screenshotUrl, card._id, card.updatedAt]); // Also trigger on updatedAt change
 
-    // Only setup observer on client side
-    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
-      setIsInView(true); // Fallback to immediate loading
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.disconnect();
-        }
-      },
-      { 
-        threshold: PREVIEW_CONFIG.lazyLoadThreshold, 
-        rootMargin: PREVIEW_CONFIG.lazyLoadRootMargin 
-      }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-      // Also register with iframe manager if available
-      if (iframeManager) {
-        iframeManager.observe(containerRef.current, url);
-      }
-    }
-
-    return () => {
-      observer.disconnect();
-      if (containerRef.current && iframeManager) {
-        iframeManager.unobserve(containerRef.current);
-      }
-    };
-  }, [url, isModal]);
-
-  // Load iframe with caching
-  useEffect(() => {
-    if (!isInView) return;
-
-    const loadIframe = async () => {
-      // Check cache first (only if iframe manager is available)
-      if (iframeManager) {
-        const cachedIframe = iframeManager.getCachedIframe(url);
-        if (cachedIframe && iframeRef.current) {
-          // Use cached iframe
-          iframeRef.current.src = cachedIframe.src;
-          setIsLoaded(true);
-          setIsCached(true);
-          setHasError(false);
-          onLoad?.();
-          return;
-        }
-      }
-
-      // Load with delay to prevent overwhelming browser
-      const delay = isModal ? 0 : PREVIEW_CONFIG.previewDelay;
-      loadTimeoutRef.current = setTimeout(() => {
-        if (iframeRef.current) {
-          iframeRef.current.src = url;
-        }
-      }, delay);
-    };
-
-    loadIframe();
-
-    return () => {
-      if (loadTimeoutRef.current) {
-        clearTimeout(loadTimeoutRef.current);
-      }
-    };
-  }, [isInView, url, onLoad, isModal]);
+  // Screenshot generation is now handled only through admin panel
+  // No automatic generation on frontend
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
     setHasError(false);
-    setRetryCount(0);
     onLoad?.();
   }, [onLoad]);
 
   const handleError = useCallback(() => {
-    if (retryCount < PREVIEW_CONFIG.retryAttempts) {
-      // Retry loading
-      setTimeout(() => {
-        setRetryCount(prev => prev + 1);
-        if (iframeRef.current) {
-          iframeRef.current.src = url;
-        }
-      }, PREVIEW_CONFIG.retryDelay);
-    } else {
-      setHasError(true);
-      setIsLoaded(false);
-      onError?.();
-    }
-  }, [retryCount, url, onError]);
+    setHasError(true);
+    setIsLoaded(false);
+    onError?.();
+    
+    // Screenshot generation only available through admin panel
+    // No auto-retry on error for frontend
+  }, [onError]);
 
-  const refreshIframe = useCallback(() => {
-    if (iframeRef.current) {
-      setIsLoaded(false);
-      setHasError(false);
-      setRetryCount(0);
-      iframeRef.current.src = url;
-    }
-  }, [url]);
+  // For modal view, still use iframe for interactivity
+  if (isModal && card.liveUrl) {
+    return (
+      <div className={`relative w-full h-full overflow-hidden ${className || ''}`}>
+        <iframe
+          className="w-full h-full border-0 bg-white"
+          src={card.liveUrl}
+          title={`${card.title} - Live Preview`}
+          sandbox="allow-same-origin allow-scripts allow-forms allow-links"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full overflow-hidden ${className || ''}`}>
-      {isInView && (
+    <div className={`relative w-full h-full overflow-hidden ${className || ''}`}>
+      {screenshotUrl ? (
         <>
-          <iframe
-            ref={iframeRef}
-            className={`w-full h-full border-0 transition-opacity duration-700 ${
+          <img
+            key={imageKey} // Force re-mount when key changes
+            ref={imgRef}
+            src={screenshotUrl} // Remove cache-busting from src
+            alt={`${card.title} screenshot`}
+            className={`w-full h-full object-cover object-top transition-opacity duration-700 ${
               isLoaded ? 'opacity-100' : 'opacity-0'
             } ${hasError ? 'hidden' : 'block'}`}
             onLoad={handleLoad}
             onError={handleError}
-            sandbox="allow-same-origin allow-scripts allow-forms allow-links"
             loading="lazy"
-            title={`${title} - Live Preview`}
-            style={{
-              transform: isModal ? 'none' : `scale(${PREVIEW_CONFIG.previewScale})`,
-              transformOrigin: 'top left',
-              width: isModal ? '100%' : `${100 / PREVIEW_CONFIG.previewScale}%`,
-              height: isModal ? '100%' : `${100 / PREVIEW_CONFIG.previewScale}%`,
-              pointerEvents: isModal ? 'auto' : 'none'
-            }}
           />
+          
+          {/* Hover overlay for better UX */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 hover:opacity-100" />
         </>
-      )}
+      ) : null}
       
       {/* Loading state */}
-      {(!isLoaded && !hasError) && (
+      {(!isLoaded && !hasError) && screenshotUrl && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
           <div className="text-center">
             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-              {isCached ? 'Loading from cache...' : 'Loading live preview...'}
+              Loading preview...
             </p>
-            {retryCount > 0 && (
-              <p className="text-xs text-gray-400 mt-1">Retry {retryCount}/{PREVIEW_CONFIG.retryAttempts}</p>
-            )}
           </div>
         </div>
       )}
       
-      {/* Error fallback */}
-      {hasError && (
+      {/* Fallback when no screenshot and no live URL */}
+      {((!screenshotUrl && !card.liveUrl) || hasError) && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
           <div className="text-center text-gray-500 dark:text-gray-400 p-4">
             <Monitor className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <div className="text-sm font-medium mb-1">{title}</div>
-            <div className="text-xs opacity-75">Preview unavailable</div>
-            <div className="text-xs opacity-50 mt-1">Click to view live site</div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={refreshIframe}
-              className="mt-2 text-xs"
-            >
-              <RefreshCw className="w-3 h-3 mr-1" />
-              Retry
-            </Button>
+            <div className="text-sm font-medium mb-1">{card.title}</div>
+            <div className="text-xs opacity-75">
+              {hasError ? 'Preview unavailable' : 'No live URL available'}
+            </div>
+            {/* Screenshot generation only available through admin panel */}
           </div>
         </div>
       )}
       
-      {/* Overlay to prevent interaction in card view */}
+      {/* Click overlay for cards */}
       {!isModal && <div className="absolute inset-0 bg-transparent cursor-pointer z-10" />}
     </div>
   );
 });
 
-PreviewIframe.displayName = 'PreviewIframe';
+ProjectPreview.displayName = 'ProjectPreview';
 
 export const Card = React.memo(({
   card,
@@ -415,12 +133,6 @@ export const Card = React.memo(({
   const [iframeError, setIframeError] = useState(false);
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
-  const isMobile = useIsMobile();
-
-  // Check if live preview should be shown (only when URL is available)
-  const shouldShowPreview = useMemo(() => {
-    return card.liveUrl && PREVIEW_CONFIG.enablePreview && (!isMobile || PREVIEW_CONFIG.mobilePreview);
-  }, [card.liveUrl, isMobile]);
 
   // Memoize the card preview to prevent unnecessary re-renders
   const cardPreview = useMemo(() => (
@@ -431,28 +143,15 @@ export const Card = React.memo(({
       }}
     >
       <div className="bg-white dark:bg-gray-800 h-full shadow-lg relative overflow-hidden" style={{ borderRadius: '16px 16px 2px 16px' }}>
-        {shouldShowPreview ? (
-          <PreviewIframe
-            url={card.liveUrl}
-            title={card.title}
-            className="w-full h-full"
-            onLoad={() => {}}
-            onError={() => {}}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-            <div className="text-center text-gray-500 dark:text-gray-400 p-4">
-              <Monitor className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <div className="text-base sm:text-lg font-medium mb-2">{card.title}</div>
-              <div className="text-xs sm:text-sm">
-                {card.liveUrl ? "Live preview will load here" : "No live URL available"}
-              </div>
-            </div>
-          </div>
-        )}
+        <ProjectPreview
+          card={card}
+          className="w-full h-full"
+          onLoad={() => {}}
+          onError={() => {}}
+        />
       </div>
     </div>
-  ), [card.title, card.liveUrl, shouldShowPreview]);
+  ), [card]);
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -585,11 +284,10 @@ export const Card = React.memo(({
                 </div>
               </div>
 
-              {/* Enhanced iframe container using PreviewIframe component */}
+              {/* Enhanced preview container using ProjectPreview component */}
               <div className="flex-1 relative bg-transparent" ref={iframeRef}>
-                <PreviewIframe
-                  url={card.liveUrl}
-                  title={card.title}
+                <ProjectPreview
+                  card={card}
                   className="w-full h-full"
                   isModal={true}
                   onLoad={handleIframeLoad}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Upload, X, Save, ImageIcon } from 'lucide-react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, X, Save, ImageIcon, Database, RefreshCw } from 'lucide-react'
 import Lenis from 'lenis'
 
 export default function AdminProjects() {
@@ -19,8 +19,6 @@ export default function AdminProjects() {
     gradient: '',
     liveUrl: '',
     techStack: [],
-    heroImage: '',
-    gallery: [],
     
     // Structured content fields
     projectOverview: '',
@@ -33,12 +31,14 @@ export default function AdminProjects() {
     
     isPublished: false
   })
-  const [uploading, setUploading] = useState(false)
   const [newTag, setNewTag] = useState('')
   const [newTech, setNewTech] = useState('')
-  const [newGalleryItem, setNewGalleryItem] = useState({ src: '', alt: '', caption: '' })
   const [newKeyFeature, setNewKeyFeature] = useState({ title: '', description: '' })
   const [newResultMetric, setNewResultMetric] = useState('')
+  const [generatingScreenshots, setGeneratingScreenshots] = useState(false)
+  const [cleaningUp, setCleaningUp] = useState(false)
+  const [cloudinaryStats, setCloudinaryStats] = useState(null)
+  const [generatingIndividualScreenshot, setGeneratingIndividualScreenshot] = useState(null)
 
   const gradientOptions = [
     { value: '', label: 'None', preview: 'bg-gray-100 dark:bg-gray-800' },
@@ -70,6 +70,7 @@ export default function AdminProjects() {
 
   useEffect(() => {
     fetchProjects()
+    fetchCloudinaryStats()
   }, [])
 
   // Reset form
@@ -82,8 +83,6 @@ export default function AdminProjects() {
       gradient: '',
       liveUrl: '',
       techStack: [],
-      heroImage: '',
-      gallery: [],
       
       // Structured content fields
       projectOverview: '',
@@ -98,10 +97,76 @@ export default function AdminProjects() {
     })
     setEditingProject(null)
     setNewTag('')
-    setNewTech('')
-    setNewGalleryItem({ src: '', alt: '', caption: '' })
-    setNewKeyFeature({ title: '', description: '' })
-    setNewResultMetric('')
+  }
+
+  // Generate screenshots for all projects
+  const generateAllScreenshots = async () => {
+    setGeneratingScreenshots(true)
+    try {
+      const response = await fetch('/api/projects/update-screenshot', {
+        method: 'PATCH'
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        // Refresh projects list to show new screenshots
+        await fetchProjects()
+        alert(`Screenshot generation complete!\n${data.summary.successful} successful, ${data.summary.errors} errors, ${data.summary.skipped} skipped.`)
+      } else {
+        throw new Error(data.error || 'Failed to generate screenshots')
+      }
+    } catch (error) {
+      console.error('Error generating screenshots:', error)
+      alert('Failed to generate screenshots: ' + error.message)
+    } finally {
+      setGeneratingScreenshots(false)
+    }
+  }
+
+  // Fetch Cloudinary stats
+  const fetchCloudinaryStats = async () => {
+    try {
+      const response = await fetch('/api/cloudinary-cleanup?action=list-resources')
+      const data = await response.json()
+      
+      if (data.success) {
+        setCloudinaryStats(data.summary)
+      }
+    } catch (error) {
+      console.error('Error fetching Cloudinary stats:', error)
+    }
+  }
+
+  // Clean up only screenshots
+  const cleanupScreenshots = async () => {
+    if (!confirm('Are you sure you want to delete all website screenshot images from Cloudinary?')) {
+      return
+    }
+
+    setCleaningUp(true)
+    try {
+      const response = await fetch('/api/cloudinary-cleanup?action=cleanup-screenshots', {
+        method: 'DELETE'
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        alert(data.message)
+        await fetchCloudinaryStats() // Refresh stats
+        // Add a small delay to ensure database changes propagate
+        setTimeout(async () => {
+          await fetchProjects() // Refresh projects to clear screenshot URLs
+          window.location.reload() // Force a complete page refresh to clear all caches
+        }, 1000)
+      } else {
+        throw new Error(data.error || 'Failed to cleanup screenshots')
+      }
+    } catch (error) {
+      console.error('Error cleaning up screenshots:', error)
+      alert('Failed to cleanup screenshots: ' + error.message)
+    } finally {
+      setCleaningUp(false)
+    }
   }
 
   // Open modal for new project
@@ -120,8 +185,6 @@ export default function AdminProjects() {
       gradient: project.gradient || 'from-blue-100 to-blue-200',
       liveUrl: project.liveUrl || '',
       techStack: project.techStack || [],
-      heroImage: project.heroImage || '',
-      gallery: project.gallery || [],
       
       // Structured content fields
       projectOverview: project.projectOverview || '',
@@ -181,58 +244,7 @@ export default function AdminProjects() {
     }
   }, [showModal])
 
-  // Handle file upload
-  const handleFileUpload = async (file, isGallery = false) => {
-    if (!file) return null
 
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'portfolio/projects')
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        return data.url
-      } else {
-        alert('Upload failed: ' + data.error)
-        return null
-      }
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert('Upload failed')
-      return null
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  // Handle hero image upload
-  const handleHeroImageUpload = async (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const url = await handleFileUpload(file)
-      if (url) {
-        setFormData(prev => ({ ...prev, heroImage: url }))
-      }
-    }
-  }
-
-  // Handle gallery image upload
-  const handleGalleryImageUpload = async (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const url = await handleFileUpload(file, true)
-      if (url) {
-        setNewGalleryItem(prev => ({ ...prev, src: url }))
-      }
-    }
-  }
 
   // Add tag
   const addTag = () => {
@@ -272,24 +284,7 @@ export default function AdminProjects() {
     }))
   }
 
-  // Add gallery item
-  const addGalleryItem = () => {
-    if (newGalleryItem.src.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        gallery: [...prev.gallery, { ...newGalleryItem }]
-      }))
-      setNewGalleryItem({ src: '', alt: '', caption: '' })
-    }
-  }
 
-  // Remove gallery item
-  const removeGalleryItem = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      gallery: prev.gallery.filter((_, i) => i !== index)
-    }))
-  }
 
   // Add key feature
   const addKeyFeature = () => {
@@ -384,6 +379,38 @@ export default function AdminProjects() {
     }
   }
 
+  // Generate screenshot for individual project
+  const generateProjectScreenshot = async (projectId, projectTitle) => {
+    setGeneratingIndividualScreenshot(projectId)
+    try {
+      const response = await fetch('/api/projects/update-screenshot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: projectId,
+          forceRegenerate: true
+        })
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        // Refresh projects list to show new screenshot
+        await fetchProjects()
+        await fetchCloudinaryStats() // Also refresh stats
+        alert(`Screenshot generated for "${projectTitle}"!`)
+      } else {
+        throw new Error(data.error || 'Failed to generate screenshot')
+      }
+    } catch (error) {
+      console.error('Error generating screenshot:', error)
+      alert('Failed to generate screenshot: ' + error.message)
+    } finally {
+      setGeneratingIndividualScreenshot(null)
+    }
+  }
+
   // Delete project
   const deleteProject = async (projectId) => {
     if (!confirm('Are you sure you want to delete this project?')) return
@@ -433,11 +460,43 @@ export default function AdminProjects() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
-          <Button onClick={openNewProjectModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-lg">
-            <Plus size={20} />
-            Add New Project
-          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
+            {cloudinaryStats && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>Cloudinary: {cloudinaryStats.total} images ({cloudinaryStats.screenshots} screenshots, {cloudinaryStats.other_images} other)</span>
+                <button 
+                  onClick={fetchCloudinaryStats}
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                  title="Refresh stats"
+                >
+                  <RefreshCw size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={generateAllScreenshots} 
+              disabled={generatingScreenshots}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 shadow-lg disabled:opacity-50 text-xs sm:text-sm"
+            >
+              <ImageIcon size={16} />
+              {generatingScreenshots ? 'Generating Simultaneously...' : 'Generate All Screenshots'}
+            </Button>
+            <Button 
+              onClick={cleanupScreenshots} 
+              disabled={cleaningUp}
+              className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 shadow-lg disabled:opacity-50 text-xs sm:text-sm"
+            >
+              <Database size={16} />
+              {cleaningUp ? 'Cleaning...' : 'Clean Website Screenshots'}
+            </Button>
+            <Button onClick={openNewProjectModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-lg text-xs sm:text-sm">
+              <Plus size={16} />
+              Add New Project
+            </Button>
+          </div>
         </div>
 
         {/* Projects Grid */}
@@ -447,15 +506,34 @@ export default function AdminProjects() {
               {/* Project Preview */}
               <div className={`bg-gradient-to-br ${project.gradient} p-4`}>
                 <div className="bg-white dark:bg-gray-800 rounded-lg aspect-video p-4 shadow-sm">
-                  {project.heroImage ? (
-                    <img 
-                      src={project.heroImage} 
-                      alt={project.title}
-                      className="w-full h-full object-cover rounded"
-                    />
+                  {project.screenshotUrl ? (
+                    <div className="relative w-full h-full">
+                      <img 
+                        key={`${project._id}-${project.screenshotUrl}-${Date.now()}`} 
+                        src={`${project.screenshotUrl}?t=${Date.now()}`}
+                        alt={`${project.title} screenshot`}
+                        className="w-full h-full object-cover rounded"
+                        onError={(e) => {
+                          // If image fails to load, hide it
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        Screenshot
+                      </div>
+                    </div>
+                  ) : project.liveUrl ? (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded flex flex-col items-center justify-center">
+                      <ImageIcon className="text-gray-400 dark:text-gray-500 mb-2" size={24} />
+                      <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                        <div>Screenshot available</div>
+                        <div>Generate to preview</div>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
-                      <ImageIcon className="text-gray-400 dark:text-gray-500" size={32} />
+                    <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded flex flex-col items-center justify-center">
+                      <ImageIcon className="text-gray-400 dark:text-gray-500 mb-2" size={32} />
+                      <div className="text-xs text-gray-500 dark:text-gray-400">No preview available</div>
                     </div>
                   )}
                 </div>
@@ -489,7 +567,7 @@ export default function AdminProjects() {
                   )}
                 </div>
 
-                {/* Status */}
+                {/* Status and Screenshot Info */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     {project.isPublished ? (
@@ -501,34 +579,64 @@ export default function AdminProjects() {
                       {project.isPublished ? 'Published' : 'Draft'}
                     </span>
                   </div>
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    {project.screenshotUrl ? (
+                      <span className="text-green-600 dark:text-green-400">📸 Screenshot</span>
+                    ) : project.liveUrl ? (
+                      <span className="text-orange-600 dark:text-orange-400">🔄 Can generate</span>
+                    ) : (
+                      <span>❌ No URL</span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openEditProjectModal(project)}
-                    className="flex-1 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <Edit2 size={16} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={project.isPublished ? "destructive" : "default"}
-                    onClick={() => togglePublish(project._id)}
-                    className={project.isPublished ? "bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600" : "bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"}
-                  >
-                    {project.isPublished ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => deleteProject(project._id)}
-                    className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
+                <div className="space-y-2">
+                  {/* First row - Main actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditProjectModal(project)}
+                      className="flex-1 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <Edit2 size={16} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={project.isPublished ? "destructive" : "default"}
+                      onClick={() => togglePublish(project._id)}
+                      className={project.isPublished ? "bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600" : "bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"}
+                    >
+                      {project.isPublished ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteProject(project._id)}
+                      className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                  {/* Second row - Screenshot action */}
+                  {project.liveUrl && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateProjectScreenshot(project._id, project.title)}
+                      className="w-full border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 disabled:opacity-50"
+                      disabled={!project.liveUrl || generatingIndividualScreenshot === project._id}
+                    >
+                      <ImageIcon size={14} className={`mr-1 ${generatingIndividualScreenshot === project._id ? 'animate-spin' : ''}`} />
+                      {generatingIndividualScreenshot === project._id 
+                        ? 'Generating...' 
+                        : project.screenshotUrl 
+                          ? 'Regenerate Screenshot' 
+                          : 'Generate Screenshot'
+                      }
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -659,46 +767,7 @@ export default function AdminProjects() {
                     </div>
                   </div>
 
-                  {/* Hero Image */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Hero Image
-                    </label>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleHeroImageUpload}
-                          className="hidden"
-                          id="hero-upload"
-                        />
-                        <label
-                          htmlFor="hero-upload"
-                          className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                        >
-                          <Upload size={16} />
-                          {uploading ? 'Uploading...' : 'Upload Hero Image'}
-                        </label>
-                      </div>
-                      {formData.heroImage && (
-                        <div className="relative">
-                          <img
-                            src={formData.heroImage}
-                            alt="Hero preview"
-                            className="w-full h-32 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, heroImage: '' }))}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+
 
                   {/* Tags */}
                   <div>
@@ -768,87 +837,7 @@ export default function AdminProjects() {
                     </div>
                   </div>
 
-                  {/* Gallery */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Project Gallery
-                    </label>
-                    <div className="space-y-4">
-                      {/* Add new gallery item */}
-                      <div className="p-4 border border-gray-300 dark:border-gray-700 rounded-lg space-y-3 bg-gray-50 dark:bg-gray-900">
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleGalleryImageUpload}
-                            className="hidden"
-                            id="gallery-upload"
-                          />
-                          <label
-                            htmlFor="gallery-upload"
-                            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                          >
-                            <Upload size={16} />
-                            Upload Image
-                          </label>
-                        </div>
-                        
-                        {newGalleryItem.src && (
-                          <div className="space-y-3">
-                            <img
-                              src={newGalleryItem.src}
-                              alt="Gallery preview"
-                              className="w-full h-32 object-cover rounded-lg"
-                            />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <input
-                                type="text"
-                                value={newGalleryItem.alt}
-                                onChange={(e) => setNewGalleryItem(prev => ({ ...prev, alt: e.target.value }))}
-                                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                                placeholder="Alt text"
-                              />
-                              <input
-                                type="text"
-                                value={newGalleryItem.caption}
-                                onChange={(e) => setNewGalleryItem(prev => ({ ...prev, caption: e.target.value }))}
-                                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white"
-                                placeholder="Caption"
-                              />
-                            </div>
-                            <Button type="button" onClick={addGalleryItem} className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
-                              Add to Gallery
-                            </Button>
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Gallery items */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {formData.gallery.map((item, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={item.src}
-                              alt={item.alt}
-                              className="w-full h-32 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeGalleryItem(index)}
-                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                            >
-                              <X size={16} />
-                            </button>
-                            {item.caption && (
-                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                {item.caption}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Structured Content */}
                   <div className="space-y-6 p-4 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900">
@@ -1023,7 +1012,7 @@ export default function AdminProjects() {
                     <Button type="button" variant="outline" onClick={closeModal} className="flex-1 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                       Cancel
                     </Button>
-                    <Button type="submit" className="flex-1 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600" disabled={uploading}>
+                    <Button type="submit" className="flex-1 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
                       <Save size={16} />
                       {editingProject ? 'Update Project' : 'Create Project'}
                     </Button>
