@@ -82,7 +82,7 @@ export function ExperienceSection() {
                 </span>
               </h2>
               <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed max-w-md mx-auto lg:mx-0">
-                Over 8 years crafting digital experiences for world-class companies
+                Over 2 years crafting digital experiences for world-class companies
               </p>
             </div>
             

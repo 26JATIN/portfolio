@@ -11,7 +11,7 @@ export const metadata = {
     default: "Jatin Gupta - Product Designer & Full-Stack Developer",
     template: "%s | Jatin Gupta - Product Designer"
   },
-  description: "Experienced Product Designer and Full-Stack Developer with 11+ years creating user-centric digital experiences. Specializing in UI/UX design, React development, and modern web applications.",
+  description: "Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences. Specializing in UI/UX design, React development, and modern web applications.",
   keywords: [
     "Product Designer",
     "UI/UX Designer", 
@@ -37,7 +37,7 @@ export const metadata = {
     locale: 'en_US',
     url: 'https://jatingupta.me',
     title: 'Jatin Gupta - Product Designer & Full-Stack Developer',
-    description: 'Experienced Product Designer and Full-Stack Developer with 11+ years creating user-centric digital experiences.',
+    description: 'Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences.',
     siteName: 'Jatin Gupta Portfolio',
     images: [
       {
@@ -51,7 +51,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Jatin Gupta - Product Designer & Full-Stack Developer',
-    description: 'Experienced Product Designer and Full-Stack Developer with 11+ years creating user-centric digital experiences.',
+    description: 'Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences.',
     creator: '@jatingupta', // Replace with your Twitter handle
     images: ['/og-image.jpg'],
   },
@@ -94,7 +94,7 @@ export default function RootLayout({ children }) {
     '@type': 'Person',
     name: 'Jatin Gupta',
     jobTitle: 'Product Designer & Full-Stack Developer',
-    description: 'Experienced Product Designer and Full-Stack Developer with 11+ years creating user-centric digital experiences.',
+    description: 'Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences.',
     url: 'https://jatingupta.me',
     sameAs: [
       'https://linkedin.com/in/jatingupta', // Replace with your actual profiles
