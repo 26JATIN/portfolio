@@ -15,6 +15,7 @@ export default function AdminProjects() {
     title: '',
     liveUrl: '',
     githubUrl: '',
+    category: '',
     tags: [],
     isPublished: false
   })
@@ -53,6 +54,7 @@ export default function AdminProjects() {
       title: '',
       liveUrl: '',
       githubUrl: '',
+      category: '',
       tags: [],
       isPublished: false
     })
@@ -142,6 +144,7 @@ export default function AdminProjects() {
       title: project.title || '',
       liveUrl: project.liveUrl || '',
       githubUrl: project.githubUrl || '',
+      category: project.category || '',
       tags: project.tags || [],
       isPublished: project.isPublished || false
     })
@@ -436,6 +439,15 @@ export default function AdminProjects() {
                   </h3>
                 </div>
                 
+                {/* Category */}
+                {project.category && (
+                  <div className="mb-3">
+                    <Badge variant="default" className="text-xs bg-blue-600 text-white">
+                      {project.category}
+                    </Badge>
+                  </div>
+                )}
+                
                 {/* URLs */}
                 <div className="space-y-2 mb-3">
                   {project.liveUrl && (
@@ -629,6 +641,23 @@ export default function AdminProjects() {
                       className="w-full px-4 py-3 border border-zinc-700 bg-zinc-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-zinc-400 transition-all"
                       placeholder="https://github.com/username/repo"
                     />
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                      Category
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.category}
+                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-4 py-3 border border-zinc-700 bg-zinc-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-zinc-400 transition-all"
+                      placeholder="e.g., Web Development, Mobile App, etc."
+                    />
+                    <p className="text-xs text-zinc-400 mt-2">
+                      Used for filtering projects on the frontend
+                    </p>
                   </div>
 
                   {/* Tags */}

@@ -430,7 +430,7 @@ export function SelectedWorkSection() {
   const [isVisible, setIsVisible] = useState(false)
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedTag, setSelectedTag] = useState('ALL')
+  const [selectedCategory, setSelectedCategory] = useState('ALL')
   const sectionRef = useRef(null)
 
   // Memoize intersection observer setup
@@ -938,22 +938,20 @@ export function SelectedWorkSection() {
     return projects.length > 0 ? projects : defaultProjects
   }, [projects])
 
-  // Get unique tags for filter buttons from all projects
-  const tags = useMemo(() => {
-    const allTags = displayProjects.flatMap(project => project.tags || [])
-    const uniqueTags = [...new Set(allTags)].sort()
-    return ['ALL', ...uniqueTags]
+  // Get unique categories for filter buttons
+  const categories = useMemo(() => {
+    const allCategories = displayProjects.map(project => project.category).filter(Boolean)
+    const uniqueCategories = [...new Set(allCategories)]
+    return ['ALL', ...uniqueCategories]
   }, [displayProjects])
 
-  // Filter projects based on selected tag
+  // Filter projects based on selected category
   const filteredProjects = useMemo(() => {
-    if (selectedTag === 'ALL') {
+    if (selectedCategory === 'ALL') {
       return displayProjects
     }
-    return displayProjects.filter(project => 
-      project.tags && project.tags.includes(selectedTag)
-    )
-  }, [displayProjects, selectedTag])
+    return displayProjects.filter(project => project.category === selectedCategory)
+  }, [displayProjects, selectedCategory])
 
   // Memoize loading skeleton
   const loadingSkeleton = useMemo(() => (
@@ -978,7 +976,7 @@ export function SelectedWorkSection() {
   const renderedProjects = useMemo(() => {
     return filteredProjects.map((project, index) => (
       <motion.div
-        key={`${selectedTag}-${project.id}`}
+        key={`${selectedCategory}-${project.id}`}
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ 
           opacity: 1, 
@@ -1005,7 +1003,7 @@ export function SelectedWorkSection() {
         />
       </motion.div>
     ));
-  }, [filteredProjects, selectedTag]);
+  }, [filteredProjects, selectedCategory]);
 
   return (
     <section ref={sectionRef} className="bg-background">
@@ -1035,31 +1033,31 @@ export function SelectedWorkSection() {
                 See All
               </Button> */}
               
-              {/* Tag Filter Buttons */}
+              {/* Category Filter Buttons */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                  Filter by Tag
+                  Filter by Category
                 </h3>
                 {/* Desktop: Vertical layout */}
                 <div className="hidden lg:flex flex-col gap-2">
-                  {tags.map((tag) => {
-                    const count = tag === 'ALL' 
+                  {categories.map((category) => {
+                    const count = category === 'ALL' 
                       ? displayProjects.length 
-                      : displayProjects.filter(p => p.tags && p.tags.includes(tag)).length
+                      : displayProjects.filter(p => p.category === category).length
                     
                     return (
                       <button
-                        key={tag}
-                        onClick={() => setSelectedTag(tag)}
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
                         className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center justify-between group ${
-                          selectedTag === tag
+                          selectedCategory === category
                             ? 'bg-foreground text-background shadow-md'
                             : 'text-gray-600 dark:text-gray-300 hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800'
                         }`}
                       >
-                        <span className="truncate">{tag}</span>
+                        <span className="truncate">{category}</span>
                         <span className={`ml-2 text-xs px-2 py-1 rounded-full transition-colors ${
-                          selectedTag === tag
+                          selectedCategory === category
                             ? 'bg-background text-foreground'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-foreground group-hover:text-background'
                         }`}>
@@ -1073,24 +1071,24 @@ export function SelectedWorkSection() {
                 {/* Mobile: Horizontal scrollable layout */}
                 <div className="lg:hidden overflow-x-auto">
                   <div className="flex gap-2 pb-2">
-                    {tags.map((tag) => {
-                      const count = tag === 'ALL' 
+                    {categories.map((category) => {
+                      const count = category === 'ALL' 
                         ? displayProjects.length 
-                        : displayProjects.filter(p => p.tags && p.tags.includes(tag)).length
+                        : displayProjects.filter(p => p.category === category).length
                       
                       return (
                         <button
-                          key={tag}
-                          onClick={() => setSelectedTag(tag)}
+                          key={category}
+                          onClick={() => setSelectedCategory(category)}
                           className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                            selectedTag === tag
+                            selectedCategory === category
                               ? 'bg-foreground text-background shadow-md'
                               : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-gray-100 dark:bg-gray-800'
                           }`}
                         >
-                          <span>{tag}</span>
+                          <span>{category}</span>
                           <span className={`text-xs px-2 py-1 rounded-full transition-colors ${
-                            selectedTag === tag
+                            selectedCategory === category
                               ? 'bg-background text-foreground'
                               : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                           }`}>
@@ -1117,15 +1115,15 @@ export function SelectedWorkSection() {
             >
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  {selectedTag === 'ALL' ? 'All Projects' : selectedTag}
+                  {selectedCategory === 'ALL' ? 'All Projects' : selectedCategory}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Showing {filteredProjects.length} of {displayProjects.length} projects
                 </p>
               </div>
-              {selectedTag !== 'ALL' && (
+              {selectedCategory !== 'ALL' && (
                 <button
-                  onClick={() => setSelectedTag('ALL')}
+                  onClick={() => setSelectedCategory('ALL')}
                   className="text-sm text-gray-500 hover:text-foreground transition-colors duration-200 flex items-center gap-2"
                 >
                   <span>Clear filter</span>
@@ -1139,7 +1137,7 @@ export function SelectedWorkSection() {
             ) : (
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={selectedTag}
+                  key={selectedCategory}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
