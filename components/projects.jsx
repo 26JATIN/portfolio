@@ -433,6 +433,23 @@ export function SelectedWorkSection() {
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const sectionRef = useRef(null)
 
+  // Check if element is already in viewport on mount (for direct mobile navigation)
+  useEffect(() => {
+    const checkInitialVisibility = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect()
+        const isInViewport = rect.top < window.innerHeight && rect.bottom >= 0
+        if (isInViewport) {
+          setIsVisible(true)
+        }
+      }
+    }
+    
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(checkInitialVisibility, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   // Function to scroll to the top of the section smoothly
   const scrollToSection = useCallback(() => {
     if (sectionRef.current) {
@@ -469,7 +486,7 @@ export function SelectedWorkSection() {
           setIsVisible(true)
         }
       },
-      { threshold: 0.3 },
+      { threshold: 0.1 }, // Reduced threshold for better mobile detection
     )
 
     if (sectionRef.current) {
@@ -966,8 +983,9 @@ export function SelectedWorkSection() {
     return projects.length > 0 ? projects : defaultProjects
   }, [projects])
 
-  // Get unique categories for filter buttons
+  // Get unique categories for filter buttons - ensure it always has values
   const categories = useMemo(() => {
+    // Always use displayProjects which has either fetched projects or default projects
     const allCategories = displayProjects.map(project => project.category).filter(Boolean)
     const uniqueCategories = [...new Set(allCategories)]
     return ['ALL', ...uniqueCategories]
@@ -1034,13 +1052,13 @@ export function SelectedWorkSection() {
   }, [filteredProjects, selectedCategory]);
 
   return (
-    <section ref={sectionRef} className="bg-background">
-      <div className="flex flex-col lg:flex-row">
+    <section ref={sectionRef} className="bg-background overflow-hidden">
+      <div className="flex flex-col lg:flex-row max-w-full">
         <div className="w-full lg:w-1/5 p-4 sm:p-6 lg:p-8 xl:p-12 flex flex-col justify-start">
           <div className="lg:sticky lg:top-8">
             <div
-              className={`transform transition-all duration-1500 ease-out ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-[50vh] opacity-0"
+              className={`transform transition-all duration-1000 ease-out ${
+                isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
               }`}
             >
               <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 lg:mb-8 hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform">
@@ -1050,9 +1068,10 @@ export function SelectedWorkSection() {
               </h2>
             </div>
             <div
-              className={`transform transition-all duration-1000 ease-out delay-500 ${
+              className={`transform transition-all duration-1000 ease-out ${
                 isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
               }`}
+              style={{ transitionDelay: '200ms' }}
             >
               {/* <Button
                 variant="default"
@@ -1068,7 +1087,7 @@ export function SelectedWorkSection() {
                 </h3>
                 {/* Desktop: Vertical layout */}
                 <div className="hidden lg:flex flex-col gap-2">
-                  {categories.map((category) => {
+                  {categories.length > 0 && categories.map((category) => {
                     const count = category === 'ALL' 
                       ? displayProjects.length 
                       : displayProjects.filter(p => p.category === category).length
@@ -1097,9 +1116,9 @@ export function SelectedWorkSection() {
                 </div>
                 
                 {/* Mobile: Horizontal scrollable layout */}
-                <div className="lg:hidden overflow-x-auto">
-                  <div className="flex gap-2 pb-2">
-                    {categories.map((category) => {
+                <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
+                  <div className="flex gap-2 pb-2 min-w-max">
+                    {categories.length > 0 && categories.map((category) => {
                       const count = category === 'ALL' 
                         ? displayProjects.length 
                         : displayProjects.filter(p => p.category === category).length
@@ -1108,7 +1127,7 @@ export function SelectedWorkSection() {
                         <button
                           key={category}
                           onClick={() => handleCategoryChange(category)}
-                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
+                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 flex-shrink-0 ${
                             selectedCategory === category
                               ? 'bg-foreground text-background shadow-md'
                               : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-transparent dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-900'
