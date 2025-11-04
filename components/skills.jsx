@@ -91,21 +91,6 @@ export function ServicesSection() {
     fetchCertificates()
   }, [])
 
-  const renderIcon = (skill) => {
-    if (skill.iconType === 'svg' && skill.iconSvg) {
-      return <div dangerouslySetInnerHTML={{ __html: skill.iconSvg }} />
-    } else if (skill.iconType === 'text' && skill.iconText) {
-      return (
-        <div className={`w-8 h-8 ${skill.iconColor.replace('text-', 'bg-')} rounded flex items-center justify-center`}>
-          <span className="text-white font-bold text-sm">{skill.iconText}</span>
-        </div>
-      )
-    } else if (skill.iconType === 'image' && skill.iconImage) {
-      return <img src={skill.iconImage} alt={skill.title} className="w-8 h-8 object-contain" />
-    }
-    return null
-  }
-
   const brands = []
 
   return (
@@ -170,42 +155,62 @@ export function ServicesSection() {
                 }}
               >
                 {/* Flip Container */}
-                <div className="relative w-full" style={{ paddingBottom: '77.27%' }}> {/* 11:8.5 aspect ratio (Coursera standard) */}
-                  <div className={`absolute inset-0 [transform-style:preserve-3d] transition-transform duration-700 ${flippedCards[skill._id] ? '[transform:rotateY(180deg)]' : ''}`}>
+                <div className="relative w-full group" style={{ paddingBottom: '69.543%' }}> {/* Reduced card aspect ratio */}
+                  <div className={`absolute inset-0 [transform-style:preserve-3d] transition-all duration-700 ${flippedCards[skill._id] ? '[transform:rotateY(180deg)]' : ''}`}>
                     {/* Front Side */}
-                    <div className="absolute inset-0 [backface-visibility:hidden] rounded-2xl backdrop-blur-md bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/10 shadow-lg p-6 flex flex-col">
-                      <div className="flex items-start gap-4 mb-4">
-                        <div
-                          className={`${skill.iconColor} flex-shrink-0 transition-transform duration-300 hover:scale-110`}
-                        >
-                          {renderIcon(skill)}
-                        </div>
-                        <span className="text-2xl font-light text-muted-foreground dark:text-gray-400">
-                          {skill.number}
-                        </span>
-                      </div>
-                      
-                      <h4 className="text-xl font-semibold text-foreground dark:text-white mb-3">
-                        {skill.title}
-                      </h4>
-                      
-                      <p className="text-sm text-muted-foreground dark:text-gray-300 leading-relaxed flex-1">
-                        {skill.description}
-                      </p>
-
-                      {skill.certificateImage && (
-                        <div className="mt-4 pt-4 border-t border-white/10">
-                          <button 
-                            onClick={() => toggleFlip(skill._id)}
-                            className="w-full px-4 py-2 bg-white dark:bg-white text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                          >
-                            <span>View Certificate</span>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
+                    <div className="absolute inset-0 [backface-visibility:hidden] rounded-2xl backdrop-blur-md bg-white/5 dark:bg-white/5 shadow-lg p-6 flex transition-all duration-300 hover:bg-white/10 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1">
+                      {/* Icon on Left */}
+                      {skill.icon && (
+                        <div className="flex-shrink-0 mr-6">
+                          <div className="w-14 h-14">
+                            {skill.icon.startsWith('<svg') ? (
+                              <div
+                                dangerouslySetInnerHTML={{ __html: skill.icon }}
+                                className="w-full h-full [&>svg]:w-full [&>svg]:h-full"
+                              />
+                            ) : (
+                              <img 
+                                src={skill.icon} 
+                                alt={skill.title}
+                                className="w-full h-full object-contain"
+                              />
+                            )}
+                          </div>
                         </div>
                       )}
+                      
+                      {/* Content Area */}
+                      <div className="flex-1 flex flex-col">
+                        {/* Title and Number */}
+                        <div className="flex items-baseline gap-3 mb-4">
+                          <h4 className="text-2xl font-bold text-foreground dark:text-white">
+                            {skill.title}
+                          </h4>
+                          <span className="text-3xl font-light text-muted-foreground dark:text-gray-500">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                        </div>
+                        
+                        {/* Description */}
+                        <p className="text-sm text-muted-foreground dark:text-gray-400 leading-relaxed flex-1 mb-4">
+                          {skill.description}
+                        </p>
+
+                        {/* View Certificate Button - Bottom Right */}
+                        {skill.certificateImage && (
+                          <div className="flex justify-end">
+                            <button 
+                              onClick={() => toggleFlip(skill._id)}
+                              className="px-4 py-2 bg-white dark:bg-white text-gray-900 rounded-lg text-sm font-medium flex items-center gap-2"
+                            >
+                              <span>View Certificate</span>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Back Side - Certificate */}
@@ -216,12 +221,12 @@ export function ServicesSection() {
                             href={skill.certificateUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="relative w-full h-full flex items-center justify-center p-4 cursor-pointer"
+                            className="relative w-full h-full flex items-center justify-center cursor-pointer"
                           >
                             <img
                               src={skill.certificateImage}
                               alt={`${skill.title} Certificate`}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-cover"
                             />
                             <button
                               onClick={(e) => {
@@ -229,20 +234,20 @@ export function ServicesSection() {
                                 e.stopPropagation()
                                 toggleFlip(skill._id)
                               }}
-                              className="absolute top-4 left-4 px-4 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2 shadow-lg"
+                              className="absolute top-2 left-2 px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors flex items-center gap-2 shadow-lg"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                               </svg>
-                              <span>Back</span>
+                             
                             </button>
                           </a>
                         ) : (
-                          <div className="relative w-full h-full flex items-center justify-center p-4">
+                          <div className="relative w-full h-full flex items-center justify-center">
                             <img
                               src={skill.certificateImage}
                               alt={`${skill.title} Certificate`}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-cover"
                             />
                             <button
                               onClick={() => toggleFlip(skill._id)}

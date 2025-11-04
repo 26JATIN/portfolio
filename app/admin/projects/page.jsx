@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '../../../components/ui/button'
 import { Badge } from '../../../components/ui/badge'
-import { Plus, Edit2, Trash2, Eye, EyeOff, X, Save, ImageIcon, Database, RefreshCw } from 'lucide-react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, X, Save, ImageIcon, Database, RefreshCw, GripVertical } from 'lucide-react'
 import Lenis from 'lenis'
 
 export default function AdminProjects() {
@@ -11,6 +11,7 @@ export default function AdminProjects() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingProject, setEditingProject] = useState(null)
+  const [draggedItem, setDraggedItem] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
     liveUrl: '',
@@ -271,6 +272,68 @@ export default function AdminProjects() {
     }
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (e, project, index) => {
+    setDraggedItem({ project, index })
+    e.dataTransfer.effectAllowed = 'move'
+    e.currentTarget.style.opacity = '0.5'
+  }
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1'
+    setDraggedItem(null)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = async (e, targetProject, targetIndex) => {
+    e.preventDefault()
+    
+    if (!draggedItem || draggedItem.index === targetIndex) return
+
+    const newProjects = [...projects]
+    const [removed] = newProjects.splice(draggedItem.index, 1)
+    newProjects.splice(targetIndex, 0, removed)
+
+    // Update order property for all affected projects
+    const updatedProjects = newProjects.map((project, index) => ({
+      ...project,
+      order: index
+    }))
+
+    setProjects(updatedProjects)
+
+    // Update orders in the database
+    try {
+      await Promise.all(
+        updatedProjects.map(project =>
+          fetch(`/api/projects/${project._id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              title: project.title,
+              liveUrl: project.liveUrl,
+              githubUrl: project.githubUrl,
+              category: project.category,
+              tags: project.tags,
+              screenshotUrl: project.screenshotUrl,
+              screenshotCloudinaryId: project.screenshotCloudinaryId,
+              isPublished: project.isPublished,
+              order: project.order
+            }),
+          })
+        )
+      )
+    } catch (error) {
+      console.error('Error updating project order:', error)
+      // Revert on error
+      fetchProjects()
+    }
+  }
+
   // Generate screenshot for individual project
   const generateProjectScreenshot = async (projectId, projectTitle) => {
     setGeneratingIndividualScreenshot(projectId)
@@ -393,8 +456,21 @@ export default function AdminProjects() {
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <div key={project._id} className="bg-white dark:bg-gray-900 rounded-xl shadow-lg dark:shadow-2xl overflow-hidden border dark:border-gray-800 hover:shadow-xl dark:hover:shadow-3xl transition-all duration-300">
+          {projects.map((project, index) => (
+            <div 
+              key={project._id} 
+              draggable
+              onDragStart={(e) => handleDragStart(e, project, index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, project, index)}
+              className="bg-white dark:bg-gray-900 rounded-xl shadow-lg dark:shadow-2xl overflow-hidden border dark:border-gray-800 hover:shadow-xl dark:hover:shadow-3xl transition-all duration-300 cursor-move hover:border-cyan-500"
+            >
+              {/* Drag Handle */}
+              <div className="absolute top-2 left-2 z-10 text-gray-400 bg-white dark:bg-gray-800 rounded p-1">
+                <GripVertical className="w-4 h-4" />
+              </div>
+
               {/* Project Preview */}
               <div className="bg-gray-50 dark:bg-gray-800 p-4">
                 <div className="bg-white dark:bg-gray-700 rounded-lg aspect-video p-4 shadow-sm">
