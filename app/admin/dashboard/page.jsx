@@ -13,7 +13,9 @@ export default function AdminDashboard() {
     totalProjects: 0,
     publishedProjects: 0,
     totalExperiences: 0,
-    publishedExperiences: 0
+    publishedExperiences: 0,
+    totalSkills: 0,
+    publishedSkills: 0
   })
   const [recentProjects, setRecentProjects] = useState([])
   const [recentExperiences, setRecentExperiences] = useState([])
@@ -54,16 +56,23 @@ export default function AdminDashboard() {
       const experiencesResponse = await fetch('/api/experiences')
       const experiencesData = await experiencesResponse.json()
 
+      // Fetch skills
+      const skillsResponse = await fetch('/api/skills')
+      const skillsData = await skillsResponse.json()
+
       if (projectsData.success && experiencesData.success) {
         const projects = projectsData.projects || []
         const experiences = experiencesData.experiences || []
+        const skills = skillsData.success ? skillsData.skills || [] : []
 
         // Calculate stats
         setStats({
           totalProjects: projects.length,
           publishedProjects: projects.filter(p => p.isPublished).length,
           totalExperiences: experiences.length,
-          publishedExperiences: experiences.filter(e => e.isPublished).length
+          publishedExperiences: experiences.filter(e => e.isPublished).length,
+          totalSkills: skills.length,
+          publishedSkills: skills.filter(s => s.published).length
         })
 
         // Get recent items (last 5)
@@ -105,6 +114,13 @@ export default function AdminDashboard() {
       description: 'Add work experience' 
     },
     { 
+      name: 'Manage Skills', 
+      icon: Plus, 
+      href: '/admin/skills', 
+      gradient: 'from-purple-600 to-pink-600',
+      description: 'Update skills & certificates' 
+    },
+    { 
       name: 'View Settings', 
       icon: Eye, 
       href: '/admin/settings', 
@@ -118,8 +134,7 @@ export default function AdminDashboard() {
       gradient: 'from-amber-600 to-orange-600',
       description: 'View live portfolio' 
     },
-  ]
-
+  ]  
   if (loading) {
     return (
       <div className="space-y-8">
@@ -169,7 +184,7 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         transition={{ duration: 0.6, delay: 0.1 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -337,6 +352,48 @@ export default function AdminDashboard() {
               }`}>
                 {Math.round(((stats.publishedProjects + stats.publishedExperiences) / Math.max(1, stats.totalProjects + stats.totalExperiences)) * 100)}%
               </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          whileHover={{ y: -4, scale: 1.02 }}
+          className={`group relative overflow-hidden ${
+            darkMode 
+              ? 'bg-zinc-950/50 border-zinc-800/50 hover:border-zinc-700/50' 
+              : 'bg-white border-gray-200 hover:border-gray-300'
+          } backdrop-blur-xl rounded-3xl p-6 border transition-all duration-300 shadow-sm ${
+            darkMode ? '' : 'shadow-lg hover:shadow-xl'
+          }`}
+        >
+          <div className={`absolute inset-0 ${
+            darkMode 
+              ? 'bg-gradient-to-br from-purple-600/5 to-pink-600/5' 
+              : 'bg-gradient-to-br from-purple-50 to-pink-50'
+          } opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                <span className="text-xl">⚡</span>
+              </div>
+              <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                darkMode 
+                  ? 'text-zinc-500 bg-zinc-900/50' 
+                  : 'text-gray-600 bg-gray-100'
+              }`}>
+                {stats.publishedSkills} live
+              </span>
+            </div>
+            <div className="space-y-2">
+              <h3 className={`text-sm font-semibold ${
+                darkMode ? 'text-zinc-400' : 'text-gray-600'
+              }`}>Skills</h3>
+              <p className={`text-3xl font-bold ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>{stats.totalSkills}</p>
             </div>
           </div>
         </motion.div>

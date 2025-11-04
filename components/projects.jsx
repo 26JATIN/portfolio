@@ -433,6 +433,34 @@ export function SelectedWorkSection() {
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const sectionRef = useRef(null)
 
+  // Function to scroll to the top of the section smoothly
+  const scrollToSection = useCallback(() => {
+    if (sectionRef.current) {
+      const sectionTop = sectionRef.current.offsetTop
+      
+      // Use Lenis for smooth scrolling if available
+      if (window.lenis) {
+        window.lenis.scrollTo(sectionTop, {
+          offset: -20, // Small offset from the top
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+        })
+      } else {
+        // Fallback to native smooth scroll
+        window.scrollTo({
+          top: sectionTop - 20,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }, [])
+
+  // Handle category change with scroll
+  const handleCategoryChange = useCallback((category) => {
+    setSelectedCategory(category)
+    scrollToSection()
+  }, [scrollToSection])
+
   // Memoize intersection observer setup
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -1048,7 +1076,7 @@ export function SelectedWorkSection() {
                     return (
                       <button
                         key={category}
-                        onClick={() => setSelectedCategory(category)}
+                        onClick={() => handleCategoryChange(category)}
                         className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center justify-between group ${
                           selectedCategory === category
                             ? 'bg-foreground text-background shadow-md'
@@ -1079,18 +1107,18 @@ export function SelectedWorkSection() {
                       return (
                         <button
                           key={category}
-                          onClick={() => setSelectedCategory(category)}
+                          onClick={() => handleCategoryChange(category)}
                           className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                             selectedCategory === category
                               ? 'bg-foreground text-background shadow-md'
-                              : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-gray-100 dark:bg-gray-800'
+                              : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-transparent dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-900'
                           }`}
                         >
                           <span>{category}</span>
                           <span className={`text-xs px-2 py-1 rounded-full transition-colors ${
                             selectedCategory === category
                               ? 'bg-background text-foreground'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                              : 'bg-gray-100 dark:bg-[#121212] text-gray-600 dark:text-gray-400'
                           }`}>
                             {count}
                           </span>

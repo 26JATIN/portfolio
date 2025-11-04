@@ -125,11 +125,12 @@ export default function AdminLayout({ children }) {
   }
 
   const menuItems = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: '📊', gradient: 'from-blue-600 to-cyan-600' },
-    { name: 'Projects', href: '/admin/projects', icon: '💼', gradient: 'from-violet-600 to-purple-600' },
-    { name: 'Experience', href: '/admin/experience', icon: '🏢', gradient: 'from-emerald-600 to-teal-600' },
-    { name: 'Settings', href: '/admin/settings', icon: '⚙️', gradient: 'from-slate-600 to-gray-600' },
-  ]
+    { name: 'Dashboard', path: '/admin/dashboard', icon: '📊', gradient: 'from-blue-500 to-cyan-500' },
+    { name: 'Projects', path: '/admin/projects', icon: '💼', gradient: 'from-purple-500 to-pink-500' },
+    { name: 'Experience', path: '/admin/experience', icon: '�', gradient: 'from-orange-500 to-red-500' },
+    { name: 'Skills', path: '/admin/skills', icon: '⚡', gradient: 'from-purple-500 to-pink-500' },
+    { name: 'Settings', path: '/admin/settings', icon: '⚙️', gradient: 'from-gray-500 to-slate-500' },
+  ];
 
   return (
     <div className={`flex h-screen transition-all duration-300 ${
@@ -266,7 +267,7 @@ export default function AdminLayout({ children }) {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1.5 relative overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-700">
             {menuItems.map((item, index) => {
-              const isActive = pathname === item.href
+              const isActive = pathname === item.path
               return (
                 <motion.div
                   key={item.name}
@@ -275,7 +276,7 @@ export default function AdminLayout({ children }) {
                   transition={{ delay: 0.1 * index + 0.3 }}
                 >
                   <Link
-                    href={item.href}
+                    href={item.path}
                     className={`flex items-center ${sidebarOpen ? 'space-x-3 px-4' : 'justify-center px-2'} py-3.5 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                       isActive
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-600/25 scale-105'
