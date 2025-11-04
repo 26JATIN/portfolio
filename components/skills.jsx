@@ -11,7 +11,6 @@ export function ServicesSection() {
   const [servicesVisible, setServicesVisible] = useState(false)
   const [certificatesVisible, setCertificatesVisible] = useState(false)
   const [skills, setSkills] = useState([])
-  const [certificates, setCertificates] = useState([])
   const [loading, setLoading] = useState(true)
   const [flippedCards, setFlippedCards] = useState({})
   const sectionRef = useRef(null)
@@ -66,29 +65,12 @@ export function ServicesSection() {
         }
       } catch (error) {
         console.error('Error fetching skills:', error)
-      }
-    }
-
-    fetchSkills()
-  }, [])
-
-  // Fetch certificates
-  useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const response = await fetch('/api/certificates?published=true')
-        const data = await response.json()
-        if (data.success) {
-          setCertificates(data.certificates)
-        }
-      } catch (error) {
-        console.error('Error fetching certificates:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchCertificates()
+    fetchSkills()
   }, [])
 
   const brands = []
@@ -131,7 +113,7 @@ export function ServicesSection() {
         {/* Left sidebar with title */}
         <div className="w-full lg:w-1/4 flex-shrink-0 mb-8 lg:mb-0 lg:pr-8">
           <h3
-            className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground dark:text-white lg:sticky lg:top-32 hover:text-cyan-500 dark:hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform ${
+            className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground dark:text-white lg:sticky lg:top-8 hover:text-cyan-500 dark:hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform ${
               servicesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
@@ -269,114 +251,6 @@ export function ServicesSection() {
           </div>
         </div>
       </div>
-
-      {/* Certificates Section */}
-      {certificates.length > 0 && (
-        <div ref={certificatesRef} className="mt-16 sm:mt-24">
-          <div className="flex flex-col lg:flex-row min-h-[40vh]">
-            {/* Left sidebar with title */}
-            <div className="w-full lg:w-1/4 flex-shrink-0 mb-8 lg:mb-0 lg:pr-8">
-              <h3
-                className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground dark:text-white lg:sticky lg:top-32 hover:text-cyan-500 dark:hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform ${
-                  certificatesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-              >
-                Certificates &<br />
-                Achievements
-              </h3>
-            </div>
-
-            {/* Right content area with certificates grid */}
-            <div className="w-full lg:w-3/4 flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-                {certificates.map((certificate, index) => (
-                  <div
-                    key={certificate._id}
-                    className={`group relative overflow-hidden rounded-2xl backdrop-blur-md bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/10 shadow-lg hover:shadow-xl hover:bg-white/10 dark:hover:bg-white/10 transition-all duration-700 ease-out hover:scale-105 ${
-                      certificatesVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-12"
-                    }`}
-                    style={{ transitionDelay: `${index * 150}ms` }}
-                  >
-                    {/* Certificate Image */}
-                    {certificate.certificateImage && (
-                      <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-gray-100 dark:bg-gray-900">
-                        <img
-                          src={certificate.certificateImage}
-                          alt={certificate.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute top-3 right-3">
-                          <Badge className="bg-purple-500/90 text-white border-0">
-                            <Award className="w-3 h-3 mr-1" />
-                            Certified
-                          </Badge>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Certificate Details */}
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="text-lg sm:text-xl font-semibold text-foreground dark:text-white pr-2">
-                          {certificate.title}
-                        </h4>
-                        {certificate.credentialUrl && (
-                          <a
-                            href={certificate.credentialUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-shrink-0 text-blue-500 hover:text-blue-600 transition-colors"
-                            title="View Certificate"
-                          >
-                            <ExternalLink className="w-5 h-5" />
-                          </a>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        <p className="text-sm font-medium text-muted-foreground dark:text-gray-400">
-                          {certificate.issuer}
-                        </p>
-                        <p className="text-xs text-muted-foreground dark:text-gray-500">
-                          Issued: {new Date(certificate.issueDate).toLocaleDateString('en-US', { 
-                            month: 'long', 
-                            year: 'numeric' 
-                          })}
-                        </p>
-                        {certificate.credentialId && (
-                          <p className="text-xs text-muted-foreground dark:text-gray-500 font-mono">
-                            ID: {certificate.credentialId}
-                          </p>
-                        )}
-                      </div>
-
-                      {certificate.description && (
-                        <p className="text-sm text-muted-foreground dark:text-gray-300 leading-relaxed mb-4">
-                          {certificate.description}
-                        </p>
-                      )}
-
-                      {certificate.skills && certificate.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {certificate.skills.map((skill, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                            >
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   )
 }
