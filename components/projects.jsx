@@ -185,6 +185,28 @@ export const Card = React.memo(({
     </div>
   ), [card]);
 
+  // Handle browser back button to close iframe
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (showIframe) {
+        event.preventDefault();
+        handleCloseIframe();
+        // Push state back to keep user on same page
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    if (showIframe) {
+      // Push a new state when iframe opens
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [showIframe]);
+
   useEffect(() => {
     function onKeyDown(event) {
       if (event.key === "Escape" && showIframe) {
@@ -1023,15 +1045,15 @@ export function SelectedWorkSection() {
     return filteredProjects.map((project, index) => (
       <motion.div
         key={`${selectedCategory}-${project.id}`}
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        initial={{ opacity: 0, y: 30, scale: 0.92 }}
         animate={{ 
           opacity: 1, 
           y: 0, 
           scale: 1,
           transition: { 
             duration: 0.6, 
-            delay: index * 0.1,
-            ease: "easeOut" 
+            delay: index * 0.12,
+            ease: [0.25, 0.46, 0.45, 0.94]
           }
         }}
         exit={{ 
@@ -1057,7 +1079,7 @@ export function SelectedWorkSection() {
         <div className="w-full lg:w-1/5 p-4 sm:p-6 lg:p-8 xl:p-12 flex flex-col justify-start">
           <div className="lg:sticky lg:top-8">
             <div
-              className={`transform transition-all duration-1000 ease-out ${
+              className={`transform transition-all duration-700 ease-out ${
                 isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
               }`}
             >
@@ -1068,10 +1090,10 @@ export function SelectedWorkSection() {
               </h2>
             </div>
             <div
-              className={`transform transition-all duration-1000 ease-out ${
+              className={`transform transition-all duration-700 ease-out ${
                 isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
               }`}
-              style={{ transitionDelay: '200ms' }}
+              style={{ transitionDelay: '150ms' }}
             >
               {/* <Button
                 variant="default"
@@ -1087,7 +1109,7 @@ export function SelectedWorkSection() {
                 </h3>
                 {/* Desktop: Vertical layout */}
                 <div className="hidden lg:flex flex-col gap-2">
-                  {categories.length > 0 && categories.map((category) => {
+                  {categories.length > 0 && categories.map((category, index) => {
                     const count = category === 'ALL' 
                       ? displayProjects.length 
                       : displayProjects.filter(p => p.category === category).length
@@ -1096,11 +1118,12 @@ export function SelectedWorkSection() {
                       <button
                         key={category}
                         onClick={() => handleCategoryChange(category)}
-                        className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center justify-between group ${
+                        className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-500 ease-out hover:scale-105 flex items-center justify-between group ${
                           selectedCategory === category
                             ? 'bg-foreground text-background shadow-md'
                             : 'text-gray-600 dark:text-gray-300 hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800'
-                        }`}
+                        } ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+                        style={{ transitionDelay: `${250 + index * 80}ms` }}
                       >
                         <span className="truncate">{category}</span>
                         <span className={`ml-2 text-xs px-2 py-1 rounded-full transition-colors ${
@@ -1118,7 +1141,7 @@ export function SelectedWorkSection() {
                 {/* Mobile: Horizontal scrollable layout */}
                 <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
                   <div className="flex gap-2 pb-2 min-w-max">
-                    {categories.length > 0 && categories.map((category) => {
+                    {categories.length > 0 && categories.map((category, index) => {
                       const count = category === 'ALL' 
                         ? displayProjects.length 
                         : displayProjects.filter(p => p.category === category).length
@@ -1127,11 +1150,12 @@ export function SelectedWorkSection() {
                         <button
                           key={category}
                           onClick={() => handleCategoryChange(category)}
-                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2 flex-shrink-0 ${
+                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-500 ease-out flex items-center gap-2 flex-shrink-0 ${
                             selectedCategory === category
                               ? 'bg-foreground text-background shadow-md'
                               : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-transparent dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-900'
-                          }`}
+                          } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                          style={{ transitionDelay: `${250 + index * 60}ms` }}
                         >
                           <span>{category}</span>
                           <span className={`text-xs px-2 py-1 rounded-full transition-colors ${
@@ -1155,9 +1179,9 @@ export function SelectedWorkSection() {
           <div className="p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 sm:space-y-12">
             {/* Filter Status Indicator */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={isVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
               className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4"
             >
               <div>
@@ -1185,10 +1209,10 @@ export function SelectedWorkSection() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selectedCategory}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                   className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
                 >
                   {renderedProjects}

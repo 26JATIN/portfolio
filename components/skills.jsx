@@ -113,9 +113,10 @@ export function ServicesSection() {
         {/* Left sidebar with title */}
         <div className="w-full lg:w-1/4 flex-shrink-0 mb-4 sm:mb-6 lg:mb-0 lg:pr-6 xl:pr-8">
           <h3
-            className={`text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-bold text-foreground dark:text-white lg:sticky lg:top-8 hover:text-cyan-500 dark:hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform leading-[1.2] ${
+            className={`text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-bold text-foreground dark:text-white lg:sticky lg:top-8 hover:text-cyan-500 dark:hover:text-cyan-500 transition-all duration-700 ease-out cursor-default hover:scale-105 transform leading-[1.2] ${
               servicesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
+            style={{ transitionDelay: '100ms' }}
           >
             How Can I<br />
             Assist You?
@@ -129,10 +130,10 @@ export function ServicesSection() {
               <div
                 key={skill._id}
                 className={`relative transition-all duration-700 ease-out ${
-                  servicesVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-12"
+                  servicesVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-95"
                 }`}
                 style={{ 
-                  transitionDelay: `${index * 150}ms`,
+                  transitionDelay: `${200 + index * 100}ms`,
                   perspective: '1000px'
                 }}
               >
