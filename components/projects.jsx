@@ -1074,21 +1074,20 @@ export function SelectedWorkSection() {
   }, [filteredProjects, selectedCategory]);
 
   return (
-    <section ref={sectionRef} className="bg-background overflow-hidden">
-      <div className="flex flex-col lg:flex-row max-w-full">
-        <div className="w-full lg:w-1/5 p-4 sm:p-6 lg:p-8 xl:p-12 flex flex-col justify-start">
-          <div className="lg:sticky lg:top-8 lg:self-start">
-            <div
-              className={`transform transition-all duration-700 ease-out ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-              }`}
-            >
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 lg:mb-8 hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform leading-tight">
-                Selected
-                <br />
-                work
-              </h2>
-            </div>
+    <section ref={sectionRef} className="bg-background py-6 sm:py-12 md:py-16 lg:py-20 px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+      <div className="flex flex-col lg:flex-row min-h-[60vh] gap-6 lg:gap-0">
+        <div className="w-full lg:w-1/5 flex-shrink-0 mb-4 sm:mb-6 lg:mb-0 lg:pr-6 xl:pr-8">
+          <div
+            className={`lg:sticky lg:top-8 transform transition-all duration-700 ease-out ${
+              isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+            }`}
+          >
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 lg:mb-8 hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform leading-tight">
+              Selected
+              <br />
+              work
+            </h2>
+            
             <div
               className={`transform transition-all duration-700 ease-out ${
                 isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
@@ -1175,8 +1174,8 @@ export function SelectedWorkSection() {
           </div>
         </div>
 
-        <div className="w-full lg:w-4/5 overflow-y-auto">
-          <div className="p-4 sm:p-6 lg:p-8 xl:p-12 space-y-8 sm:space-y-12">
+        <div className="w-full lg:w-4/5 flex-1">
+          <div className="space-y-8 sm:space-y-12">
             {/* Filter Status Indicator */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
