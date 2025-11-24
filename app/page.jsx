@@ -7,10 +7,10 @@ import { ContactSection } from "@/components/contact"
 
 export const metadata = {
   title: "Jatin Gupta - Product Designer & Full-Stack Developer Portfolio",
-  description: "Welcome to Jatin Gupta's portfolio. Discover my work as a Product Designer and Full-Stack Developer with 11+ years of experience in creating exceptional digital experiences.",
+  description: "Welcome to Jatin Gupta's portfolio. Discover my work as a Product Designer and Full-Stack Developer with 2+ years of experience in creating exceptional digital experiences.",
   openGraph: {
     title: "Jatin Gupta - Product Designer & Full-Stack Developer Portfolio",
-    description: "Welcome to Jatin Gupta's portfolio. Discover my work as a Product Designer and Full-Stack Developer with 11+ years of experience in creating exceptional digital experiences.",
+    description: "Welcome to Jatin Gupta's portfolio. Discover my work as a Product Designer and Full-Stack Developer with 2+ years of experience in creating exceptional digital experiences.",
   }
 }
 
@@ -19,20 +19,22 @@ export default function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: 'Jatin Gupta Portfolio',
-    description: 'Portfolio website showcasing the work of Jatin Gupta, Product Designer and Full-Stack Developer',
+    description: 'Portfolio website showcasing the work of Jatin Gupta, Full Stack Developer and Product Designer',
     url: 'https://jatingupta.me',
     mainEntity: {
       '@type': 'Person',
       name: 'Jatin Gupta',
-      jobTitle: 'Product Designer & Full-Stack Developer',
+      jobTitle: 'Full-Stack Developer & Product Designer',
+      description: 'Full Stack Developer and Product Designer specializing in React, Next.js, and modern web technologies.',
       hasOccupation: {
         '@type': 'Occupation',
-        name: 'Product Designer',
+        name: 'Full-Stack Developer',
         occupationLocation: {
           '@type': 'Country',
           name: 'India'
         }
-      }
+      },
+      knowsAbout: ['Full Stack Development', 'Product Design', 'React', 'Next.js', 'SEO', 'Web Performance']
     }
   }
 

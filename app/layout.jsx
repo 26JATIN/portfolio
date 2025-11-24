@@ -8,19 +8,22 @@ import "./globals.css"
 export const metadata = {
   metadataBase: new URL('https://jatingupta.me'),
   title: {
-    default: "Jatin Gupta - Product Designer & Full-Stack Developer",
-    template: "%s | Jatin Gupta - Product Designer"
+    default: "Jatin Gupta - Best Full Stack Developer & Product Designer",
+    template: "%s | Jatin Gupta - Best Full Stack Developer"
   },
-  description: "Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences. Specializing in UI/UX design, React development, and modern web applications.",
+  description: "Looking for the Best Full Stack Developer? Jatin Gupta is an experienced Product Designer and Full-Stack Developer creating premium user-centric digital experiences.",
   keywords: [
+    "Best Full Stack Developer",
+    "Full Stack Developer",
+    "Hire Full Stack Developer",
     "Product Designer",
     "UI/UX Designer", 
-    "Full-Stack Developer",
-    "React Developer",
-    "Next.js Developer",
+    "React Developer India",
+    "Next.js Expert",
     "Frontend Developer",
     "Web Designer",
     "JavaScript Developer",
+    "Freelance Web Developer",
     "Portfolio",
     "Jatin Gupta"
   ],
@@ -36,22 +39,22 @@ export const metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://jatingupta.me',
-    title: 'Jatin Gupta - Product Designer & Full-Stack Developer',
-    description: 'Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences.',
+    title: 'Jatin Gupta - Best Full Stack Developer & Product Designer',
+    description: 'Looking for the Best Full Stack Developer? Jatin Gupta is an experienced Product Designer and Full-Stack Developer creating premium user-centric digital experiences.',
     siteName: 'Jatin Gupta Portfolio',
     images: [
       {
-        url: '/og-image.jpg', // You'll need to add this image
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Jatin Gupta - Product Designer & Full-Stack Developer',
+        alt: 'Jatin Gupta - Best Full Stack Developer & Product Designer',
       }
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Jatin Gupta - Product Designer & Full-Stack Developer',
-    description: 'Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences.',
+    title: 'Jatin Gupta - Best Full Stack Developer & Product Designer',
+    description: 'Looking for the Best Full Stack Developer? Jatin Gupta is an experienced Product Designer and Full-Stack Developer creating premium user-centric digital experiences.',
     creator: '@jatingupta', // Replace with your Twitter handle
     images: ['/og-image.jpg'],
   },
