@@ -106,7 +106,7 @@ export function ContactSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               className="bg-white text-indigo-800 hover:bg-white/90 rounded-full px-8 py-3 font-semibold transition-all duration-300 hover:scale-105"
-              onClick={() => window.location.href = 'mailto:hello@jatingupta.dev'}
+              onClick={() => window.location.href = 'mailto:26jatingupta@gmail.com'}
             >
               Send me an email
             </Button>

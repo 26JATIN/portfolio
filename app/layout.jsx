@@ -35,6 +35,17 @@ export const metadata = {
     address: false,
     telephone: false,
   },
+  icons: {
+    icon: [
+      { url: '/icons/logo.jpeg' },
+      { url: '/icons/logo.jpeg', sizes: '32x32', type: 'image/jpeg' },
+      { url: '/icons/logo.jpeg', sizes: '16x16', type: 'image/jpeg' },
+    ],
+    apple: [
+      { url: '/icons/logo.jpeg' },
+    ],
+    shortcut: '/icons/logo.jpeg',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -44,7 +55,7 @@ export const metadata = {
     siteName: 'Jatin Gupta Portfolio',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/icons/logo.jpeg',
         width: 1200,
         height: 630,
         alt: 'Jatin Gupta - Best Full Stack Developer & Product Designer',
@@ -56,7 +67,7 @@ export const metadata = {
     title: 'Jatin Gupta - Best Full Stack Developer & Product Designer',
     description: 'Looking for the Best Full Stack Developer? Jatin Gupta is an experienced Product Designer and Full-Stack Developer creating premium user-centric digital experiences.',
     creator: '@jatingupta', // Replace with your Twitter handle
-    images: ['/og-image.jpg'],
+    images: ['/icons/logo.jpeg'],
   },
   robots: {
     index: true,
@@ -100,9 +111,9 @@ export default function RootLayout({ children }) {
     description: 'Experienced Product Designer and Full-Stack Developer with 2+ years creating user-centric digital experiences.',
     url: 'https://jatingupta.me',
     sameAs: [
-      'https://linkedin.com/in/jatingupta', // Replace with your actual profiles
+      'https://linkedin.com/in/26jatin', // Replace with your actual profiles
       'https://github.com/26JATIN',
-      'https://twitter.com/jatingupta',
+      'https://twitter.com/JatinGupta93145',
     ],
     knowsAbout: [
       'Product Design',
@@ -113,7 +124,7 @@ export default function RootLayout({ children }) {
       'Full-Stack Development',
       'Web Design'
     ],
-    image: 'https://jatingupta.me/profile-image.jpg',
+    image: 'https://jatingupta.me/icons/logo.jpeg',
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'IN' // Replace with your country
