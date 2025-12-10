@@ -87,13 +87,17 @@ export function HeroSection() {
                 <Button 
                   size="lg"
                   className="rounded-full px-8 py-6 text-base font-medium transition-all duration-300 hover:scale-105 border-0 bg-primary text-primary-foreground hover:bg-primary/90"
+                  asChild
                 >
-                  Hire me
+                  <a href="mailto:26jatingupta@gmail.com">
+                    Hire me
+                  </a>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg"
                   className="border-2 rounded-full px-8 py-6 text-base font-medium transition-all duration-300 border-border text-foreground hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   View projects
                 </Button>

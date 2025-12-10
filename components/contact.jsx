@@ -106,9 +106,11 @@ export function ContactSection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               className="bg-white text-indigo-800 hover:bg-white/90 rounded-full px-8 py-3 font-semibold transition-all duration-300 hover:scale-105"
-              onClick={() => window.location.href = 'mailto:26jatingupta@gmail.com'}
+              asChild
             >
-              Send me an email
+              <a href="mailto:26jatingupta@gmail.com">
+                Send me an email
+              </a>
             </Button>
           </div>
         </WobbleCard>
@@ -130,9 +132,11 @@ export function ContactSection() {
             <Button
               variant="outline"
               className="rounded-full px-6 py-2 border-2 hover:bg-foreground hover:text-background transition-all duration-300 hover:scale-105"
-              onClick={() => window.open('#', '_blank')}
+              asChild
             >
-              Download CV
+              <a href="/Jatin Gupta - Resume.pdf" download="Jatin_Gupta_Resume.pdf" target="_blank">
+                Download CV
+              </a>
             </Button>
           </div>
         </footer>

@@ -1074,7 +1074,7 @@ export function SelectedWorkSection() {
   }, [filteredProjects, selectedCategory]);
 
   return (
-    <section ref={sectionRef} className="bg-background py-6 sm:py-12 md:py-16 lg:py-20 px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+    <section id="projects" ref={sectionRef} className="bg-background py-6 sm:py-12 md:py-16 lg:py-20 px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16">
       <div className="flex flex-col lg:flex-row min-h-[60vh] gap-6 lg:gap-0">
         <div className="w-full lg:w-1/5 flex-shrink-0 mb-4 sm:mb-6 lg:mb-0 lg:pr-6 xl:pr-8">
           <div
