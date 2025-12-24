@@ -51,7 +51,7 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
     setHasError(true);
     setIsLoaded(false);
     onError?.();
-    
+
     // Screenshot generation only available through admin panel
     // No auto-retry on error for frontend
   }, [onError]);
@@ -72,7 +72,7 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
       <div className={`relative w-full h-full overflow-hidden ${className || ''}`}>
         {/* Loading Spinner Overlay */}
         {iframeLoading && (
-          <div className="absolute inset-0 bg-gray-50 dark:bg-gray-900 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-gray-50 dark:bg-black flex items-center justify-center z-10">
             <div className="text-center">
               <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
@@ -84,7 +84,7 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
             </div>
           </div>
         )}
-        
+
         <iframe
           className="w-full h-full border-0 bg-white"
           src={card.liveUrl}
@@ -107,19 +107,18 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
             ref={imgRef}
             src={screenshotUrl} // Remove cache-busting from src
             alt={`${card.title} screenshot`}
-            className={`w-full h-full object-cover object-top transition-opacity duration-700 ${
-              isLoaded ? 'opacity-100' : 'opacity-0'
-            } ${hasError ? 'hidden' : 'block'}`}
+            className={`w-full h-full object-cover object-top transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'
+              } ${hasError ? 'hidden' : 'block'}`}
             onLoad={handleLoad}
             onError={handleError}
             loading="lazy"
           />
-          
+
           {/* Hover overlay for better UX */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 hover:opacity-100" />
         </>
       ) : null}
-      
+
       {/* Loading state */}
       {(!isLoaded && !hasError) && screenshotUrl && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
@@ -131,7 +130,7 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
           </div>
         </div>
       )}
-      
+
       {/* Fallback when no screenshot and no live URL */}
       {((!screenshotUrl && !card.liveUrl) || hasError) && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
@@ -145,7 +144,7 @@ const ProjectPreview = React.memo(({ card, className, onLoad, onError, isModal =
           </div>
         </div>
       )}
-      
+
       {/* Click overlay for cards */}
       {!isModal && <div className="absolute inset-0 bg-transparent cursor-pointer z-10" />}
     </div>
@@ -168,7 +167,7 @@ export const Card = React.memo(({
 
   // Memoize the card preview to prevent unnecessary re-renders
   const cardPreview = useMemo(() => (
-    <div 
+    <div
       className={`rounded-2xl transition-all duration-700 ease-out hover:scale-105 p-1 sm:p-2 aspect-[4/3] overflow-hidden relative group`}
       style={{
         borderRadius: '24px 24px 4px 24px'
@@ -178,8 +177,8 @@ export const Card = React.memo(({
         <ProjectPreview
           card={card}
           className="w-full h-full"
-          onLoad={() => {}}
-          onError={() => {}}
+          onLoad={() => { }}
+          onError={() => { }}
         />
       </div>
     </div>
@@ -258,7 +257,7 @@ export const Card = React.memo(({
   const handleRefreshIframe = () => {
     setIframeLoaded(false);
     setIframeError(false);
-    
+
     // Force refresh by adding a timestamp to the URL
     if (iframeRef.current) {
       const iframe = iframeRef.current.querySelector('iframe');
@@ -286,7 +285,7 @@ export const Card = React.memo(({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg" 
+              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -295,16 +294,16 @@ export const Card = React.memo(({
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
               className={`relative z-[60] h-full w-full bg-white/5 dark:bg-black/5 backdrop-blur-xl border border-white/10 dark:border-white/5 flex flex-col`}
-              transition={{ 
-                type: "spring", 
-                stiffness: 300, 
+              transition={{
+                type: "spring",
+                stiffness: 300,
                 damping: 30
               }}
             >
               {/* Single integrated header */}
               <div className="flex-shrink-0 flex items-center justify-between p-2 border-b border-white/5 bg-white/5 dark:bg-black/5 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <motion.div 
+                  <motion.div
                     className="w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-sm"
                     initial={{ rotate: 0 }}
                     animate={{ rotate: 360 }}
@@ -316,26 +315,25 @@ export const Card = React.memo(({
                     </h3>
                   </div>
                 </div>
-                
+
                 {/* Integrated Controls */}
                 <div className="flex items-center gap-1">
                   {/* GitHub Button */}
                   <button
                     onClick={() => card.githubUrl && window.open(card.githubUrl, '_blank')}
                     disabled={!card.githubUrl}
-                    className={`flex h-6 w-6 items-center justify-center rounded-md transition-all duration-200 backdrop-blur-sm ${
-                      !card.githubUrl
+                    className={`flex h-6 w-6 items-center justify-center rounded-md transition-all duration-200 backdrop-blur-sm ${!card.githubUrl
                         ? 'bg-gray-600/20 text-gray-600 cursor-not-allowed opacity-50'
                         : 'bg-white/10 hover:bg-white/20 dark:bg-black/10 dark:hover:bg-black/20 text-gray-700 dark:text-gray-200 hover:scale-110'
-                    }`}
+                      }`}
                     title={!card.githubUrl ? 'GitHub URL not available' : 'Open GitHub Repository'}
                   >
                     <Github className="w-3 h-3" />
                   </button>
-                  
+
                   {/* Separator */}
                   <div className="w-px h-4 bg-white/10 mx-1"></div>
-                  
+
                   {/* Refresh Button */}
                   <button
                     onClick={handleRefreshIframe}
@@ -344,7 +342,7 @@ export const Card = React.memo(({
                   >
                     <RefreshCw className="w-3 h-3 text-gray-700 dark:text-gray-200" />
                   </button>
-                  
+
                   {/* External Link Button */}
                   <button
                     onClick={() => window.open(card.liveUrl, '_blank')}
@@ -353,7 +351,7 @@ export const Card = React.memo(({
                   >
                     <ExternalLink className="w-3 h-3 text-gray-700 dark:text-gray-200" />
                   </button>
-                  
+
                   {/* Close Button */}
                   <button
                     onClick={handleCloseIframe}
@@ -404,7 +402,7 @@ export const Card = React.memo(({
         <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-start gap-2">
-              <motion.h3 
+              <motion.h3
                 layoutId={layout ? `title-${card.title}` : undefined}
                 className="text-lg sm:text-xl font-semibold text-foreground leading-tight flex-1"
               >
@@ -424,7 +422,7 @@ export const Card = React.memo(({
                 </Badge>
               ))}
             </div>
-            
+
             {/* GitHub Button - exact same style as tags */}
             {card.githubUrl && (
               <Badge
@@ -466,7 +464,7 @@ export function SelectedWorkSection() {
         }
       }
     }
-    
+
     // Small delay to ensure DOM is ready
     const timer = setTimeout(checkInitialVisibility, 100)
     return () => clearTimeout(timer)
@@ -476,7 +474,7 @@ export function SelectedWorkSection() {
   const scrollToSection = useCallback(() => {
     if (sectionRef.current) {
       const sectionTop = sectionRef.current.offsetTop
-      
+
       // Use Lenis for smooth scrolling if available
       if (window.lenis) {
         window.lenis.scrollTo(sectionTop, {
@@ -521,19 +519,19 @@ export function SelectedWorkSection() {
   // Fetch published projects with error handling and loading states
   useEffect(() => {
     const controller = new AbortController();
-    
+
     const fetchProjects = async () => {
       try {
         const response = await fetch('/api/projects?published=true', {
           signal: controller.signal
         })
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch projects')
         }
-        
+
         const data = await response.json()
-        
+
         if (data.success) {
           // Transform the projects to match the existing Card component structure
           const transformedProjects = data.projects.map(project => ({
@@ -543,8 +541,8 @@ export function SelectedWorkSection() {
             preview: (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 mb-3">
-                  <div 
-                    className="w-6 h-6 rounded" 
+                  <div
+                    className="w-6 h-6 rounded"
                     style={{ backgroundColor: '#3B82F6' }}
                   ></div>
                   <span className="text-sm font-medium">{project.title}</span>
@@ -556,7 +554,7 @@ export function SelectedWorkSection() {
                   {project.projectOverview || project.category || 'No description available.'}
                 </p>
                 <div className="flex gap-2 mt-4">
-                  <button 
+                  <button
                     className="text-white text-sm px-4 py-2 rounded bg-blue-600"
                   >
                     View Project
@@ -566,7 +564,7 @@ export function SelectedWorkSection() {
                   </button>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <div 
+                  <div
                     className="w-16 h-16 rounded-full opacity-20 bg-blue-600"
                   ></div>
                 </div>
@@ -583,7 +581,7 @@ export function SelectedWorkSection() {
                     </p>
                   </div>
                 )}
-                
+
                 {project.challenge && (
                   <div className="space-y-4">
                     <h4 className="text-xl font-semibold text-gray-900 dark:text-white">The Challenge</h4>
@@ -654,7 +652,7 @@ export function SelectedWorkSection() {
     }
 
     fetchProjects()
-    
+
     return () => {
       controller.abort()
     }
@@ -710,7 +708,7 @@ export function SelectedWorkSection() {
               ZenPoint Wellness is a comprehensive mindfulness and wellness platform designed to help users find inner peace and mental clarity in today's fast-paced world. The project focused on creating a calming digital experience that reflects the brand's core values of tranquility and mindfulness.
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">The Challenge</h4>
             <p className="text-gray-600 leading-relaxed">
@@ -809,7 +807,7 @@ export function SelectedWorkSection() {
               Timber Elegance represents a new approach to furniture e-commerce, focusing on sustainable, premium wood furniture. The platform combines elegant design with cutting-edge technology to create an immersive shopping experience that reflects the quality and craftsmanship of the products.
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">The Challenge</h4>
             <p className="text-gray-600 leading-relaxed">
@@ -886,7 +884,7 @@ export function SelectedWorkSection() {
               Digital Agency Pro needed a website that would showcase their creative capabilities while maintaining professional credibility. The challenge was creating a balance between creative expression and business functionality that would appeal to both startups and enterprise clients.
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Design Philosophy</h4>
             <p className="text-gray-600 leading-relaxed">
@@ -958,7 +956,7 @@ export function SelectedWorkSection() {
               A next-generation mobile banking application designed to provide secure, intuitive financial management tools for the modern user. The project emphasized cutting-edge security while maintaining a modern, approachable interface that makes complex financial operations simple and accessible.
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Security-First Design</h4>
             <p className="text-gray-600 leading-relaxed">
@@ -1046,19 +1044,19 @@ export function SelectedWorkSection() {
       <motion.div
         key={`${selectedCategory}-${project.id}`}
         initial={{ opacity: 0, y: 30, scale: 0.92 }}
-        animate={{ 
-          opacity: 1, 
-          y: 0, 
+        animate={{
+          opacity: 1,
+          y: 0,
           scale: 1,
-          transition: { 
-            duration: 0.6, 
+          transition: {
+            duration: 0.6,
             delay: index * 0.12,
             ease: [0.25, 0.46, 0.45, 0.94]
           }
         }}
-        exit={{ 
-          opacity: 0, 
-          y: -20, 
+        exit={{
+          opacity: 0,
+          y: -20,
           scale: 0.95,
           transition: { duration: 0.3 }
         }}
@@ -1078,20 +1076,18 @@ export function SelectedWorkSection() {
       <div className="flex flex-col lg:flex-row min-h-[60vh] gap-6 lg:gap-0">
         <div className="w-full lg:w-1/5 flex-shrink-0 mb-4 sm:mb-6 lg:mb-0 lg:pr-6 xl:pr-8">
           <div
-            className={`lg:sticky lg:top-8 transform transition-all duration-700 ease-out ${
-              isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-            }`}
+            className={`lg:sticky lg:top-8 transform transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+              }`}
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 sm:mb-6 lg:mb-8 hover:text-cyan-500 transition-all duration-300 cursor-default hover:scale-105 transform leading-tight">
               Selected
               <br />
               work
             </h2>
-            
+
             <div
-              className={`transform transition-all duration-700 ease-out ${
-                isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-              }`}
+              className={`transform transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+                }`}
               style={{ transitionDelay: '150ms' }}
             >
               {/* <Button
@@ -1100,7 +1096,7 @@ export function SelectedWorkSection() {
               >
                 See All
               </Button> */}
-              
+
               {/* Category Filter Buttons */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
@@ -1109,59 +1105,55 @@ export function SelectedWorkSection() {
                 {/* Desktop: Vertical layout */}
                 <div className="hidden lg:flex flex-col gap-2">
                   {categories.length > 0 && categories.map((category, index) => {
-                    const count = category === 'ALL' 
-                      ? displayProjects.length 
+                    const count = category === 'ALL'
+                      ? displayProjects.length
                       : displayProjects.filter(p => p.category === category).length
-                    
+
                     return (
                       <button
                         key={category}
                         onClick={() => handleCategoryChange(category)}
-                        className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-500 ease-out hover:scale-105 flex items-center justify-between group ${
-                          selectedCategory === category
+                        className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-500 ease-out hover:scale-105 flex items-center justify-between group ${selectedCategory === category
                             ? 'bg-foreground text-background shadow-md'
                             : 'text-gray-600 dark:text-gray-300 hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800'
-                        } ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+                          } ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
                         style={{ transitionDelay: `${250 + index * 80}ms` }}
                       >
                         <span className="truncate">{category}</span>
-                        <span className={`ml-2 text-xs px-2 py-1 rounded-full transition-colors ${
-                          selectedCategory === category
+                        <span className={`ml-2 text-xs px-2 py-1 rounded-full transition-colors ${selectedCategory === category
                             ? 'bg-background text-foreground'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 group-hover:bg-foreground group-hover:text-background'
-                        }`}>
+                          }`}>
                           {count}
                         </span>
                       </button>
                     )
                   })}
                 </div>
-                
+
                 {/* Mobile: Horizontal scrollable layout */}
                 <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
                   <div className="flex gap-2 pb-2 min-w-max">
                     {categories.length > 0 && categories.map((category, index) => {
-                      const count = category === 'ALL' 
-                        ? displayProjects.length 
+                      const count = category === 'ALL'
+                        ? displayProjects.length
                         : displayProjects.filter(p => p.category === category).length
-                      
+
                       return (
                         <button
                           key={category}
                           onClick={() => handleCategoryChange(category)}
-                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-500 ease-out flex items-center gap-2 flex-shrink-0 ${
-                            selectedCategory === category
+                          className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm font-medium transition-all duration-500 ease-out flex items-center gap-2 flex-shrink-0 ${selectedCategory === category
                               ? 'bg-foreground text-background shadow-md'
                               : 'text-gray-600 dark:text-gray-300 hover:text-foreground bg-transparent dark:bg-[#0a0a0a] border border-gray-200 dark:border-gray-900'
-                          } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                            } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                           style={{ transitionDelay: `${250 + index * 60}ms` }}
                         >
                           <span>{category}</span>
-                          <span className={`text-xs px-2 py-1 rounded-full transition-colors ${
-                            selectedCategory === category
+                          <span className={`text-xs px-2 py-1 rounded-full transition-colors ${selectedCategory === category
                               ? 'bg-background text-foreground'
                               : 'bg-gray-100 dark:bg-[#121212] text-gray-600 dark:text-gray-400'
-                          }`}>
+                            }`}>
                             {count}
                           </span>
                         </button>
@@ -1225,7 +1217,7 @@ export function SelectedWorkSection() {
   )
 }
 
-{/* Custom Styles for Modal and Performance Optimizations */}
+{/* Custom Styles for Modal and Performance Optimizations */ }
 <style jsx global>{`
   /* Custom scrollbar for modal content */
   .modal-scrollbar {
