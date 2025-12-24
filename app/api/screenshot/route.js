@@ -36,7 +36,7 @@ export async function POST(request) {
       'viewport.height': 800,
       'screenshot.type': 'png',
       'screenshot.quality': 85,
-      waitFor: 30000, // Increased to 30 seconds for complete loading
+      waitFor: 50000, // Wait 19 seconds for complete loading
       waitUntil: ['load', 'networkidle0'], // Wait for load event and network idle
       timeout: 90000, // Increased timeout to 90 seconds
       scroll: true, // Trigger scroll to load lazy content
@@ -62,8 +62,8 @@ export async function POST(request) {
     }
 
     // Add additional delay to ensure screenshot is fully processed
-    if (duration < 25) {
-      const additionalDelay = 30 - duration
+    if (duration < 15) {
+      const additionalDelay = 19 - duration
       console.log(`Screenshot completed too quickly (${duration}s), adding ${additionalDelay.toFixed(1)}s additional delay...`)
       await new Promise(resolve => setTimeout(resolve, additionalDelay * 1000))
     }
@@ -134,7 +134,7 @@ export async function GET(request) {
       'viewport.height': height,
       'screenshot.type': 'png',
       'screenshot.quality': quality,
-      waitFor: 30000, // Increased to 30 seconds for complete loading
+      waitFor: 50000, // Wait 19 seconds for complete loading
       waitUntil: ['load', 'networkidle0'], // Wait for load event and network idle
       timeout: 90000, // Increased timeout to 90 seconds
       scroll: true, // Trigger scroll to load lazy content
