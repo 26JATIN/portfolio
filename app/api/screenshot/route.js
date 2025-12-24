@@ -23,6 +23,25 @@ export async function POST(request) {
     // Add cache-busting timestamp to the target URL
     const timestampedUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
     
+    // JavaScript to force dark mode on websites
+    const darkModeScript = `
+      // Set common localStorage keys for dark mode
+      localStorage.setItem('theme', 'dark');
+      localStorage.setItem('color-theme', 'dark');
+      localStorage.setItem('darkMode', 'true');
+      localStorage.setItem('dark-mode', 'true');
+      localStorage.setItem('mode', 'dark');
+      localStorage.setItem('colorScheme', 'dark');
+      localStorage.setItem('prefers-color-scheme', 'dark');
+      
+      // Add dark mode classes to HTML and body
+      document.documentElement.classList.add('dark', 'dark-mode', 'dark-theme');
+      document.body.classList.add('dark', 'dark-mode', 'dark-theme');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-mode', 'dark');
+      document.body.setAttribute('data-theme', 'dark');
+    `;
+
     // Generate screenshot using Microlink API with extended wait time
     const params = encode({
       url: timestampedUrl,
@@ -36,11 +55,11 @@ export async function POST(request) {
       'viewport.height': 800,
       'screenshot.type': 'png',
       'screenshot.quality': 85,
-      waitFor: 50000, // Wait 19 seconds for complete loading
-      waitUntil: ['load', 'networkidle0'], // Wait for load event and network idle
+      waitFor: 20000, // Wait 20 seconds for complete loading
       timeout: 90000, // Increased timeout to 90 seconds
       scroll: true, // Trigger scroll to load lazy content
-      animations: false // Disable animations for consistent screenshots
+      animations: false, // Disable animations for consistent screenshots
+      scripts: darkModeScript // Inject script to force dark mode
     })
 
     const screenshotUrl = `https://api.microlink.io/?${params}`
@@ -121,6 +140,25 @@ export async function GET(request) {
     // Add cache-busting timestamp to the target URL
     const timestampedUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
     
+    // JavaScript to force dark mode on websites
+    const darkModeScript = `
+      // Set common localStorage keys for dark mode
+      localStorage.setItem('theme', 'dark');
+      localStorage.setItem('color-theme', 'dark');
+      localStorage.setItem('darkMode', 'true');
+      localStorage.setItem('dark-mode', 'true');
+      localStorage.setItem('mode', 'dark');
+      localStorage.setItem('colorScheme', 'dark');
+      localStorage.setItem('prefers-color-scheme', 'dark');
+      
+      // Add dark mode classes to HTML and body
+      document.documentElement.classList.add('dark', 'dark-mode', 'dark-theme');
+      document.body.classList.add('dark', 'dark-mode', 'dark-theme');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-mode', 'dark');
+      document.body.setAttribute('data-theme', 'dark');
+    `;
+
     // Generate screenshot using Microlink API with extended wait time
     const params = encode({
       url: timestampedUrl,
@@ -134,11 +172,11 @@ export async function GET(request) {
       'viewport.height': height,
       'screenshot.type': 'png',
       'screenshot.quality': quality,
-      waitFor: 50000, // Wait 19 seconds for complete loading
-      waitUntil: ['load', 'networkidle0'], // Wait for load event and network idle
+      waitFor: 20000, // Wait 20 seconds for complete loading
       timeout: 90000, // Increased timeout to 90 seconds
       scroll: true, // Trigger scroll to load lazy content
-      animations: false // Disable animations for consistent screenshots
+      animations: false, // Disable animations for consistent screenshots
+      scripts: darkModeScript // Inject script to force dark mode
     })
 
     const screenshotUrl = `https://api.microlink.io/?${params}`
