@@ -29,7 +29,7 @@ export async function POST(request) {
       screenshot: true,
       meta: false,
       embed: 'screenshot.url',
-      colorScheme: 'light',
+      colorScheme: 'dark', // Prefer dark theme if website supports it
       'viewport.isMobile': false,
       'viewport.deviceScaleFactor': 2,
       'viewport.width': 1200,
@@ -127,7 +127,7 @@ export async function GET(request) {
       screenshot: true,
       meta: false,
       embed: 'screenshot.url',
-      colorScheme: 'light',
+      colorScheme: 'dark', // Prefer dark theme if website supports it
       'viewport.isMobile': false,
       'viewport.deviceScaleFactor': 2,
       'viewport.width': width,
